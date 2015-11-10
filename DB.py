@@ -36,7 +36,8 @@ class DB:
 		self.shelf = shelve.open(dbFilename)
 
 	def __del__(self):
-		self.shelf.close()
+		if hasattr(self, 'shelf'):
+			self.shelf.close()
 
 	def __contains__(self, k):
 		return k in self.shelf

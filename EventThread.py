@@ -30,17 +30,18 @@ eventPatterns = {
 	# "(?P<user>USER) wins with PLAY \\(.*(?P<play>PLAY)\\)": [lambda play, **kw: {'type': 'play', 'play': play}, lambda user, **kw: {'type': 'trick_win', 'who': user}],
 	"USER wins with PLAY \\(.*(?P<play>PLAY)\\)": lambda play: {'type': 'play', 'play': play},
 
-	# We use deal/game_end as a marker instead of determining if the game is over ourselves, and round_summary to figure out the last player's bid
+	# We use deal/game_end as a marker instead of determining if the game is over ourselves, and round_summary/nil_signal to figure out the last player's bid
 	"/me deals the cards": lambda: {'type': 'deal'},
 	"Game over!": lambda: {'type': 'game_end'},
 	"(?P<user1>USER)/(?P<user2>USER) (?:make their bid|go bust): (?P<taken>NUMBER)/(?P<bid>NUMBER)": lambda user1, user2, taken, bid: {'type': 'round_summary', 'who': (user1, user2), 'taken': int(taken), 'bid': int(bid)},
+	"(?P<user>USER) goes nil!": lambda user: {'type': 'nil_signal', 'who': user, 'bid': 'nil'},
+	"(?P<user>USER) goes blind nil!": lambda user: {'type': 'nil_signal', 'who': user, 'bid': 'blind'},
 
 	# These are unnecessary messages and generate no events
 	"Round over!": None,
 	"USER/USER lead NUMBER to NUMBER of NUMBER": None,
 	"tied at NUMBER of NUMBER": None,
-	"USER/USER bag out": None,
-	"USER goes (?:blind )?nil!": None,
+	"USER/USER bag (?:way )?out": None,
 	"USER/USER: select a card to pass \\(/msg USER \\.pass <card>\\)": None,
 	"USER passes a card": None,
 	"Cards have been passed!": None,
@@ -144,6 +145,9 @@ class EventThread(Thread):
 				line = data[self.gameCon.logOffset:]
 				line = line[:line.index('\n')]
 				raise RuntimeError("EventThread: Unrecognized log line: %s" % line)
+		if hasattr(self.gameCon, 'game'):
+			self.gameCon.game.out()
+			print "Current score: %s" % self.gameCon.game.score
 
 	def cachedGet(self, url, etags = {}):
 		headers = {}

@@ -1,8 +1,5 @@
 from Data import *
 
-def bidValue(bid):
-	return 0 if bid in ('nil', 'blind') else bid
-
 class GameConstructor:
 	def __init__(self, logFilename, onCommit = lambda game: None):
 		self.state = 'idle'
@@ -61,6 +58,7 @@ class GameConstructor:
 						del self.players
 				if not hasattr(self, 'currentRound'):
 					self.currentRound = Round()
+					self.currentRound.game = self.game
 					self.game.rounds.append(self.currentRound)
 				# Currently we have no immediate event for the last bid, so we switch states here. We figure out the last bidder by process of elimination, and leave the last bid unset
 				if len(self.currentRound.bids) == 3:
@@ -73,6 +71,10 @@ class GameConstructor:
 				self.currentRound.bids.append(event['bid'])
 				del self.currentPlayer
 				return
+			if event['type'] == 'nil_signal':
+				# A nil_signal in the bidding state must not be the last player (see nil_signal in the playing state)
+				# We get non-final-player nil bids from bid events, so we can ignore this
+				return
 			self.mismatch(event)
 
 		if self.state == 'playing':
@@ -80,6 +82,7 @@ class GameConstructor:
 				self.currentPlayer = event['who']
 				if not hasattr(self, 'currentTrick'):
 					self.currentTrick = Trick(self.currentPlayer)
+					self.currentTrick.round = self.currentRound
 					self.currentRound.tricks.append(self.currentTrick)
 				return
 			if event['type'] == 'play':
@@ -97,6 +100,13 @@ class GameConstructor:
 					missingPlayer = self.currentRound.players[-1]
 					(partner,) = set(event['who']) - {missingPlayer}
 					self.currentRound.bids.append(bidValue(event['bid']) - bidValue(self.currentRound.bids[self.currentRound.players.index(partner)]))
+				return
+			if event['type'] == 'nil_signal':
+				# We need this only to distinguish the last bid, since round_summary would just tell us it's zero
+				# If we're getting it in the playing state, it must be the last bid, but we double-check
+				if len(self.currentRound.bids) != len(self.currentRound.players) - 1:
+					raise RuntimeError("Got non-final nil_signal in playing state")
+				self.currentRound.bids.append(event['bid'])
 				return
 			if event['type'] == 'game_end':
 				self.commitGame()
