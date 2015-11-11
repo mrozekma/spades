@@ -1,39 +1,31 @@
 from datetime import datetime
+import os
 import re
+from threading import currentThread
 
 from DB import db
 from EventThread import EventThread
+from Log import console
 
-EventThread().start()
+from HTTPHandler import HTTPHandler
+from rorn.HTTPServer import HTTPServer
 
-'''
-	events = []
-	with open('/tmp/#rhspades.log') as f:
-		# for line in f:
-		while True:
-			off = f.tell()
-			line = f.readline()
-			if line == '':
-				break
-			line = fixSuits(line)
-			for pattern, fns in eventPatterns:
-				match = pattern.match(line)
-				if match:
-					for fn in fns:
-						g = match.groupdict() # Copy; the original match groupdict is not changed below
-						event = {'ts': datetime.strptime(g['ts'], '%Y-%m-%d %H:%M:%S'), 'off': off}
-						del g['ts']
-						event.update(fn(**g))
-						events.append(event)
-					break
-	d['events'] = events
+PORT = 8083
+currentThread().name = 'main'
+# EventThread().start()
 
-events = d['events']
+server = HTTPServer(('', PORT), HTTPHandler)
+try:
+	console('rorn', 'Listening for connections')
+	server.serve_forever()
+except KeyboardInterrupt:
+	sys.__stdout__.write("\n\n")
+	console('main', 'Exiting at user request')
+except (Exception, SystemExit), e:
+	sys.__stdout__.write("\n\n")
+	console('main', "%s", e)
 
-handler = GameConstructor()
-for event in events:
-	handler.pump(event)
-'''
+console('main', 'Closing server sockets')
+server.server_close()
 
-print 'Paused'
-raw_input()
+console('main', 'Done')
