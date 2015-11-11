@@ -148,6 +148,8 @@ class EventThread(Thread):
 		if hasattr(self.gameCon, 'game'):
 			self.gameCon.game.out()
 			print "Current score: %s" % self.gameCon.game.score
+			if hasattr(self.gameCon, 'currentRound'):
+				print "Left: %s" % self.gameCon.currentRound.cardsLeft
 
 	def cachedGet(self, url, etags = {}):
 		headers = {}

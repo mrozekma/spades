@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-ordering = [rank + suit for suit in 'scdh' for rank in ['A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2']]
+ordering = [rank + suit for suit in 'sdch' for rank in ['A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2']]
 
 def bidValue(bid):
 	return 0 if bid in ('nil', 'blind') else bid
@@ -36,6 +36,21 @@ class Game:
 		return [(self.players[0], self.players[2]), (self.players[1], self.players[3])]
 
 	@property
+	def winner(self):
+		scores = [{'team': team, 'score': score} for team, score in self.score.iteritems()]
+		if scores[0]['score'] >= self.goal or scores[1]['score'] >= self.goal:
+			if scores[0]['score'] > scores[1]['score']:
+				return scores[0]['team']
+			elif scores[1]['score'] > scores[0]['score']:
+				return scores[1]['team']
+			# Both over the goal but tied; game goes into overtime
+		return None
+
+	@property
+	def finished(self):
+		return self.winner is not None
+
+	@property
 	def score(self):
 		scores = {team: 0 for team in self.teams}
 		bags = {team: 0 for team in self.teams}
@@ -67,6 +82,10 @@ class Round:
 			trick.round = self
 
 	@property
+	def finished(self):
+		return len(self.tricks) == 13
+
+	@property
 	def bidsByPlayer(self):
 		return dict(zip(self.players, self.bids))
 
@@ -76,6 +95,15 @@ class Round:
 		for trick in self.tricks:
 			rtn[trick.winner].append(trick)
 		return rtn
+
+	@property
+	def cardsPlayed(self):
+		return sum((trick.plays for trick in self.tricks), [])
+
+	@property
+	def cardsLeft(self):
+		played = self.cardsPlayed
+		return filter(lambda card: card not in played, ordering)
 
 	# score and bags copy spades.awk's incorrect handling of nil (nil tricks aren't bags if they cover a partner's missing tricks)
 
