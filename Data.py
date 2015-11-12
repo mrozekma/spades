@@ -11,7 +11,10 @@ def findWinner(cards):
 	return sorted(filter(lambda card: card[-1] in (cards[0][-1], 's'), cards), key = ordering.index)[0]
 
 class Game:
-	def __init__(self, creator, goal, bagLimit):
+	def __init__(self, logFilename, start, creator, goal, bagLimit):
+		self.logFilename = logFilename
+		self.start = start
+		self.end = None
 		self.creator = creator
 		self.goal = goal
 		self.bagLimit = bagLimit
@@ -20,7 +23,7 @@ class Game:
 		self.rounds = []
 
 	def __getstate__(self):
-		return {k: getattr(self, k) for k in ('creator', 'goal', 'bagLimit', 'players', 'rounds')}
+		return {k: getattr(self, k) for k in ('logFilename', 'start', 'end', 'creator', 'goal', 'bagLimit', 'players', 'rounds')}
 
 	def __setstate__(self, v):
 		self.__dict__ = v
@@ -48,7 +51,7 @@ class Game:
 
 	@property
 	def finished(self):
-		return self.winner is not None
+		return self.end is not None
 
 	@property
 	def score(self):

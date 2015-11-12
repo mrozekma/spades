@@ -61,3 +61,19 @@ db = DB(os.path.join(os.path.dirname(__file__), 'db'))
 for k in ('games',):
 	if k not in db:
 		db[k] = {}
+
+# We store this in the DB module because it's where other games are stored
+# It's set/unset by the EventThread, but not actually serialized
+activeGame = None
+def getActiveGame():
+	return activeGame
+def setActiveGame(newActiveGame):
+	global activeGame
+	activeGame = newActiveGame
+
+def getGames():
+	# Get the raw map (not a LoudMap), and append the active game if there is one
+	rtn = db['games'].m
+	if activeGame is not None:
+		rtn[activeGame.logFilename] = activeGame
+	return rtn

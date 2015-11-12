@@ -1,6 +1,8 @@
 import sys
 
 from Log import console
+from os.path import isfile
+from utils import *
 from wrappers import header, footer
 
 from rorn.HTTPHandler import HTTPHandler as ParentHandler
@@ -19,8 +21,17 @@ class HTTPHandler(ParentHandler):
 
 	def requestDone(self):
 		if self.wrappers:
+			types = ['less', 'css', 'js']
+			includes = {type: [] for type in types}
+			handler = getattr(self, 'handler', None)
+			if handler and 'statics' in handler:
+				for key in ensureList(handler['statics']):
+					for type in types:
+						if isfile("static/%s.%s" % (key, type)):
+							includes[type].append("/static/%s.%s" % (key, type))
+
 			writer = ResponseWriter()
-			header(self)
+			header(self, includes)
 			sys.stdout.write(self.response)
 			footer(self)
 			self.response = writer.done()

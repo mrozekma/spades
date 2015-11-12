@@ -14,7 +14,7 @@ class GameConstructor:
 
 	def commitGame(self):
 		self.onCommit(self.game)
-		self.game = None
+		del self.game
 
 	def pump(self, event):
 		print event
@@ -23,13 +23,14 @@ class GameConstructor:
 		if self.state == 'idle':
 			if event['type'] == 'game_start':
 				self.state = 'sitting'
-				self.game = Game(event['who'], event['goal'], event['bags'])
+				self.game = Game(self.logFilename, event['ts'], event['who'], event['goal'], event['bags'])
 				self.players = []
 				return
 			self.mismatch(event)
 
 		if event['type'] == 'game_abort':
 			self.state = 'idle'
+			self.game.end = event['ts']
 			if hasattr(self, 'players'):
 				self.game.players += self.players
 				del self.players
@@ -109,8 +110,8 @@ class GameConstructor:
 				self.currentRound.bids.append(event['bid'])
 				return
 			if event['type'] == 'game_end':
+				self.game.end = event['ts']
 				self.commitGame()
-				del self.game
 				self.state = 'idle'
 				return
 			if event['type'] == 'deal':

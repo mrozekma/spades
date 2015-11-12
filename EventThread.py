@@ -6,6 +6,7 @@ from threading import Thread
 from time import sleep
 import traceback
 
+import DB
 from DB import db
 from GameConstructor import GameConstructor
 
@@ -79,6 +80,7 @@ class EventThread(Thread):
 		while True:
 			try:
 				self.tick()
+				DB.setActiveGame(getattr(self.gameCon, 'game', None))
 			except Exception:
 				print "EventThread error"
 				traceback.print_exc()

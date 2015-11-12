@@ -12,7 +12,7 @@ from rorn.HTTPServer import HTTPServer
 
 PORT = 8083
 currentThread().name = 'main'
-# EventThread().start()
+EventThread().start()
 
 server = HTTPServer(('', PORT), HTTPHandler)
 try:
