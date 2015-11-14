@@ -10,6 +10,10 @@ from Log import console
 from HTTPHandler import HTTPHandler
 from rorn.HTTPServer import HTTPServer
 
+# Different classnames for the new version of bootstrap
+from rorn.Box import classnames as boxClasses
+boxClasses.update({'base': 'alert', 'info': 'alert-info', 'success': 'alert-success', 'warning': 'alert-warning', 'error': 'alert-danger'})
+
 PORT = 8083
 currentThread().name = 'main'
 EventThread().start()

@@ -35,6 +35,11 @@ class Game:
 		return (self.players + self.players)[idx:idx+4]
 
 	@property
+	def friendlyName(self):
+		players = self.players + ['<open>'] * (4 - len(self.players))
+		return "%s to %d" % ("%s/%s vs. %s/%s" % tuple(players), self.goal)
+
+	@property
 	def teams(self):
 		return [(self.players[0], self.players[2]), (self.players[1], self.players[3])]
 
@@ -55,14 +60,9 @@ class Game:
 
 	@property
 	def score(self):
-		scores = {team: 0 for team in self.teams}
-		bags = {team: 0 for team in self.teams}
-		for round in self.rounds:
-			for team, score in round.score.iteritems():
-				scores[team] += score
-			for team, bag in round.bags.iteritems():
-				bags[team] += bag
-		return {team: scores[team] - 10 * self.bagLimit * int(bags[team] / self.bagLimit) for team in self.teams}
+		if len(self.rounds) == 0:
+			return {team: 0 for team in self.teams}
+		return self.rounds[-1].score
 
 	def out(self):
 		print "Game created by %s, %d goal, %d bags" % (self.creator, self.goal, self.bagLimit)
@@ -108,11 +108,11 @@ class Round:
 		played = self.cardsPlayed
 		return filter(lambda card: card not in played, ordering)
 
-	# score and bags copy spades.awk's incorrect handling of nil (nil tricks aren't bags if they cover a partner's missing tricks)
+	# scoreChange and bags copy spades.awk's incorrect handling of nil (nil tricks aren't bags if they cover a partner's missing tricks)
 
 	# This *doesn't* include negative points for bagging out, since it requires the round-to-round bag total
 	@property
-	def score(self):
+	def scoreChange(self):
 		# We don't compute the score for incomplete rounds
 		if len(self.tricks) < 13:
 			return {team: 0 for team in self.game.teams}
@@ -147,6 +147,20 @@ class Round:
 		bids = self.bidsByPlayer
 		taken = {player: len(tricks) for player, tricks in self.tricksByWinner.iteritems()}
 		return {team: max(0, sum(taken[player] for player in team) - sum(bidValue(bids[player]) for player in team)) for team in self.game.teams}
+
+	# Score in the game at the end of this round (or end of the last round, if this round is incomplete)
+	@property
+	def score(self):
+		scores = {team: 0 for team in self.game.teams}
+		bags = {team: 0 for team in self.game.teams}
+		for round in self.game.rounds:
+			for team, score in round.scoreChange.iteritems():
+				scores[team] += score
+			for team, bag in round.bags.iteritems():
+				bags[team] += bag
+			if round == self:
+				break
+		return {team: scores[team] - 10 * self.game.bagLimit * int(bags[team] / self.game.bagLimit) for team in self.game.teams}
 
 	def out(self):
 		print "  Round"

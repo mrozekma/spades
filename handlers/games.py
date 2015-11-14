@@ -9,13 +9,8 @@ from DB import db, getGames
 def games(handler):
 	def makeEvent(game):
 		event = {'log': splitext(game.logFilename)[0],
+		         'title': game.friendlyName,
 		         'start': game.start.strftime('%Y-%m-%dT%H:%M:%S')}
-		if len(game.players) == 4:
-			event['title'] = "%s to %d" % ("%s/%s vs. %s/%s" % tuple(game.players), game.goal)
-		elif game.finished:
-			event['title'] = "Aborted game to %d" % game.goal
-		else:
-			event['title'] = "Game still forming to %d" % game.goal
 		if game.finished:
 			event['end'] = game.end
 		else:

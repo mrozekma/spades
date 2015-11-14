@@ -30,12 +30,27 @@ def header(handler, includes):
 	for filename in includes['js']:
 		print "<script src=\"%s\" type=\"text/javascript\"></script>" % filename
 
-	if handler.wrapperData['jsOnReady']:
+	for fn in handler.wrapperData['headerFns']:
+		fn()
+
+	if handler.wrapperData['jsOnLoad'] or handler.wrapperData['jsOnReady']:
 		print "<script type=\"text/javascript\">"
-		print "$(document).ready(function() {"
-		for js in handler.wrapperData['jsOnReady']:
-			print "    %s" % js
-		print "});"
+		if handler.wrapperData['jsOnLoad']:
+			print "$(window).load(function() {"
+			for js in handler.wrapperData['jsOnLoad']:
+				if hasattr(js, '__call__'):
+					js()
+				else:
+					print "    %s" % js
+			print "});"
+		if handler.wrapperData['jsOnReady']:
+			print "$(document).ready(function() {"
+			for js in handler.wrapperData['jsOnReady']:
+				if hasattr(js, '__call__'):
+					js()
+				else:
+					print "    %s" % js
+			print "});"
 		print "</script>"
 
 	# Less
@@ -53,7 +68,7 @@ def header(handler, includes):
 	print "<div class=\"topbar\">"
 	print "<h1><a href=\"/\">%s</a></h1>" % bodyTitle
 	print "<div class=\"links\">"
-	print "<a href=\"#\">Test</a> |	<a href=\"#\">Test</a>"
+	print "<a href=\"#\">Test</a> | <a href=\"#\">Test</a>"
 	print "</div>"
 	print "</div>"
 

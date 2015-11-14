@@ -11,7 +11,7 @@ from rorn.ResponseWriter import ResponseWriter
 class HTTPHandler(ParentHandler):
 	def __init__(self, request, address, server):
 		self.wrappers = True
-		self.wrapperData = {'jsOnReady': []}
+		self.wrapperData = {'jsOnReady': [], 'jsOnLoad': [], 'headerFns': []}
 		self.localData = {}
 		self.pageTitle = None
 		ParentHandler.__init__(self, request, address, server)
@@ -41,5 +41,11 @@ class HTTPHandler(ParentHandler):
 
 	def jsOnReady(self, js):
 		self.wrapperData['jsOnReady'].append(js)
+
+	def jsOnLoad(self, js):
+		self.wrapperData['jsOnLoad'].append(js)
+
+	def callFromHeader(self, fn):
+		self.wrapperData['headerFns'].append(fn)
 
 from handlers import *

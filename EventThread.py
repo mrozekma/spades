@@ -7,7 +7,7 @@ from time import sleep
 import traceback
 
 import DB
-from DB import db
+from DB import db, getGames
 from GameConstructor import GameConstructor
 
 logURL = 'http://pileus.org/andy/spades/'
@@ -74,7 +74,6 @@ class EventThread(Thread):
 		self.name = 'event thread'
 		self.daemon = True
 		self.gameCon = None
-		self.logCount = 0
 
 	def run(self):
 		while True:
@@ -97,11 +96,11 @@ class EventThread(Thread):
 			# This log file is bad and starts mid-game
 			logs.remove('20150823_201536.log')
 
-			if len(logs) < self.logCount:
-				raise RuntimeError("Only got %d %s from server (previously saw %d)" % (len(logs), 'log' if len(logs) == 1 else 'logs', self.logCount))
-			elif len(logs) == self.logCount: # No new logs
+			numGames = len(getGames())
+			if len(logs) < numGames:
+				raise RuntimeError("Only got %d %s from server (have %d in database)" % (len(logs), 'log' if len(logs) == 1 else 'logs', numGames))
+			elif len(logs) == numGames: # No new logs
 				return
-			self.logCount = len(logs)
 
 			# Find the first one we don't have a game for
 			for log in logs:
@@ -171,3 +170,4 @@ class EventThread(Thread):
 		game.out()
 		db['games'][self.gameCon.logFilename] = game
 		self.gameCon = None
+		self.tick()
