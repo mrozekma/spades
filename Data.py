@@ -37,7 +37,7 @@ class Game:
 	@property
 	def friendlyName(self):
 		players = self.players + ['<open>'] * (4 - len(self.players))
-		return "%s to %d" % ("%s/%s vs. %s/%s" % tuple(players), self.goal)
+		return "%s/%s vs. %s/%s to %d" % (players[0], players[2], players[1], players[3], self.goal)
 
 	@property
 	def teams(self):
@@ -114,7 +114,7 @@ class Round:
 	@property
 	def scoreChange(self):
 		# We don't compute the score for incomplete rounds
-		if len(self.tricks) < 13:
+		if len(self.tricks) < 13 or len(self.tricks[-1].plays) < 4:
 			return {team: 0 for team in self.game.teams}
 
 		# If bid made, score 10 points per bid trick and 1 point per bag
@@ -141,7 +141,7 @@ class Round:
 	@property
 	def bags(self):
 		# We don't compute the bags for incomplete rounds
-		if len(self.tricks) < 13:
+		if len(self.tricks) < 13 or len(self.tricks[-1].plays) < 4:
 			return {team: 0 for team in self.game.teams}
 
 		bids = self.bidsByPlayer
