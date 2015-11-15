@@ -19,7 +19,7 @@ class Game:
 		self.goal = goal
 		self.bagLimit = bagLimit
 
-		self.players = []
+		self.players = [None] * 4
 		self.rounds = []
 
 	def __getstate__(self):
@@ -36,7 +36,7 @@ class Game:
 
 	@property
 	def friendlyName(self):
-		players = self.players + ['<open>'] * (4 - len(self.players))
+		players = [player or '<open>' for player in self.players]
 		return "%s/%s vs. %s/%s to %d" % (players[0], players[2], players[1], players[3], self.goal)
 
 	@property
@@ -66,15 +66,15 @@ class Game:
 
 	def out(self):
 		print "Game created by %s, %d goal, %d bags" % (self.creator, self.goal, self.bagLimit)
-		print "  Players: %s" % ', '.join(self.players)
+		print "  Players: %s" % ', '.join(map(str, self.players))
 		for round in self.rounds:
 			round.out()
 
 class Round:
 	def __init__(self):
-		self.players = []
-		self.bids = []
-		self.tricks = []
+		self.players = [None] * 4
+		self.bids = [None] * 4
+		self.tricks = [None] * 13
 
 	def __getstate__(self):
 		return {k: getattr(self, k) for k in ('players', 'bids', 'tricks')}
@@ -86,7 +86,7 @@ class Round:
 
 	@property
 	def finished(self):
-		return len(self.tricks) == 13
+		return self.tricks[-1] is not None and self.tricks[-1].plays[-1] is not None
 
 	@property
 	def bidsByPlayer(self):
@@ -101,7 +101,7 @@ class Round:
 
 	@property
 	def cardsPlayed(self):
-		return sum((trick.plays for trick in self.tricks), [])
+		return sum((trick.plays for trick in self.tricks if trick is not None), [])
 
 	@property
 	def cardsLeft(self):
@@ -114,7 +114,7 @@ class Round:
 	@property
 	def scoreChange(self):
 		# We don't compute the score for incomplete rounds
-		if len(self.tricks) < 13 or len(self.tricks[-1].plays) < 4:
+		if not self.finished:
 			return {team: 0 for team in self.game.teams}
 
 		# If bid made, score 10 points per bid trick and 1 point per bag
@@ -141,7 +141,7 @@ class Round:
 	@property
 	def bags(self):
 		# We don't compute the bags for incomplete rounds
-		if len(self.tricks) < 13 or len(self.tricks[-1].plays) < 4:
+		if not self.finished:
 			return {team: 0 for team in self.game.teams}
 
 		bids = self.bidsByPlayer
@@ -166,12 +166,13 @@ class Round:
 		print "  Round"
 		print "    Bids: %s" % ', '.join("%s (%s)" % x for x in zip(self.players, self.bids))
 		for trick in self.tricks:
-			trick.out()
+			if trick is not None:
+				trick.out()
 
 class Trick:
 	def __init__(self, leader):
 		self.leader = leader
-		self.plays = []
+		self.plays = [None] * 4
 
 	@property
 	def playsByPlayer(self):
@@ -190,4 +191,4 @@ class Trick:
 		return self.playersByPlay[self.win]
 
 	def out(self):
-		print "    Trick (led by %s): %s" % (self.leader, ' '.join(self.plays))
+		print "    Trick (led by %s): %s" % (self.leader, ' '.join(map(str, self.plays)))

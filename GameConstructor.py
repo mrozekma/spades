@@ -16,6 +16,13 @@ class GameConstructor:
 		self.onCommit(self.game)
 		del self.game
 
+	# Replace the first None in 'l' with 'v'
+	def emplace(self, l, v):
+		l[l.index(None)] = v
+
+	def filled(self, l):
+		return l[-1] is not None
+
 	def pump(self, event):
 		print event
 		if event['off'] < self.logOffset:
@@ -54,22 +61,22 @@ class GameConstructor:
 				if hasattr(self, 'players'):
 					if not event['who'] in self.players:
 						raise RuntimeError("Bidding player %s not seated" % event['who'])
-					self.game.players.append(event['who'])
-					if len(self.game.players) == len(self.players):
+					self.emplace(self.game.players, event['who'])
+					if self.filled(self.game.players):
 						del self.players
 				if not hasattr(self, 'currentRound'):
 					self.currentRound = Round()
 					self.currentRound.game = self.game
 					self.game.rounds.append(self.currentRound)
 				# Currently we have no immediate event for the last bid, so we switch states here. We figure out the last bidder by process of elimination, and leave the last bid unset
-				if len(self.currentRound.bids) == 3:
+				if self.currentRound.bids[-2] is not None: # We have the second-to-last bid
 					(lastPlayer,) = set(self.game.players) - set(self.currentRound.players)
-					self.currentRound.players.append(lastPlayer)
+					self.emplace(self.currentRound.players, lastPlayer)
 					self.state = 'playing'
 				return
 			if event['type'] == 'bid':
-				self.currentRound.players.append(self.currentPlayer)
-				self.currentRound.bids.append(event['bid'])
+				self.emplace(self.currentRound.players, self.currentPlayer)
+				self.emplace(self.currentRound.bids, event['bid'])
 				del self.currentPlayer
 				return
 			if event['type'] == 'nil_signal':
@@ -84,30 +91,30 @@ class GameConstructor:
 				if not hasattr(self, 'currentTrick'):
 					self.currentTrick = Trick(self.currentPlayer)
 					self.currentTrick.round = self.currentRound
-					self.currentRound.tricks.append(self.currentTrick)
+					self.emplace(self.currentRound.tricks, self.currentTrick)
 				return
 			if event['type'] == 'play':
-				self.currentTrick.plays.append(event['play'])
-				if len(self.currentTrick.plays) == len(self.game.players):
+				self.emplace(self.currentTrick.plays, event['play'])
+				if self.filled(self.currentTrick.plays):
 					del self.currentTrick
 					# We wait for round_end or game_end instead of going straight to bidding
-					# if len(self.currentRound.tricks) == 13:
+					# if self.filled(self.currentRound.tricks):
 						# del self.currentRound
 						# self.state = 'bidding'
 				return
 			if event['type'] == 'round_summary':
 				# Using the power of subtraction, we can figure out what the last bid was this round
-				if len(self.currentRound.bids) == len(self.currentRound.players) - 1 and self.currentRound.players[-1] in event['who']:
+				if self.currentRound.bids[-1] is None and self.currentRound.players[-1] in event['who']:
 					missingPlayer = self.currentRound.players[-1]
 					(partner,) = set(event['who']) - {missingPlayer}
-					self.currentRound.bids.append(bidValue(event['bid']) - bidValue(self.currentRound.bids[self.currentRound.players.index(partner)]))
+					self.emplace(self.currentRound.bids, bidValue(event['bid']) - bidValue(self.currentRound.bids[self.currentRound.players.index(partner)]))
 				return
 			if event['type'] == 'nil_signal':
 				# We need this only to distinguish the last bid, since round_summary would just tell us it's zero
 				# If we're getting it in the playing state, it must be the last bid, but we double-check
-				if len(self.currentRound.bids) != len(self.currentRound.players) - 1:
+				if self.currentRound.bids[-1] is not None:
 					raise RuntimeError("Got non-final nil_signal in playing state")
-				self.currentRound.bids.append(event['bid'])
+				self.emplace(self.currentRound.bids, event['bid'])
 				return
 			if event['type'] == 'game_end':
 				self.game.end = event['ts']
@@ -118,6 +125,6 @@ class GameConstructor:
 				del self.currentRound
 				self.state = 'bidding'
 				return
-
-
 			self.mismatch(event)
+
+		raise RuntimeError("Invalid state: %s" % self.state)
