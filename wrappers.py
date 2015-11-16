@@ -36,13 +36,13 @@ def header(handler, includes):
 	if handler.wrapperData['jsOnLoad'] or handler.wrapperData['jsOnReady']:
 		print "<script type=\"text/javascript\">"
 		if handler.wrapperData['jsOnLoad']:
-			print "$(window).load(function() {"
+			print "$(window).load(function() {setTimeout(function() {"
 			for js in handler.wrapperData['jsOnLoad']:
 				if hasattr(js, '__call__'):
 					js()
 				else:
 					print "    %s" % js
-			print "});"
+			print "}, 0)});"
 		if handler.wrapperData['jsOnReady']:
 			print "$(document).ready(function() {"
 			for js in handler.wrapperData['jsOnReady']:
@@ -66,9 +66,9 @@ def header(handler, includes):
 	print "<div class=\"content\">"
 
 	print "<div class=\"topbar\">"
-	print "<h1><a href=\"/\">%s</a></h1>" % bodyTitle
+	print "<h1>%s</h1>" % bodyTitle
 	print "<div class=\"links\">"
-	print "<a href=\"#\">Test</a> | <a href=\"#\">Test</a>"
+	print "<a href=\"/\">Games</a>"
 	print "</div>"
 	print "</div>"
 

@@ -29,8 +29,3 @@ def games(handler):
 	print "<script src=\"/static/fullcalendar.js\" type=\"text/javascript\"></script>"
 	print "<div id=\"calendar\"></div>"
 	print "<br><br>"
-
-@get('test')
-def test(handler):
-	for i in range(100):
-		print "Content<br>"
