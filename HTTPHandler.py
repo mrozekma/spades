@@ -25,7 +25,7 @@ class HTTPHandler(ParentHandler):
 			includes = {type: [] for type in types}
 			handler = getattr(self, 'handler', None)
 			if handler and 'statics' in handler:
-				for key in ensureList(handler['statics']):
+				for key in ensureIter(handler['statics']):
 					for type in types:
 						if isfile("static/%s.%s" % (key, type)):
 							includes[type].append("/static/%s.%s" % (key, type))

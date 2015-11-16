@@ -6,6 +6,7 @@ from threading import currentThread
 from DB import db
 from EventThread import EventThread
 from Log import console
+from WebSocket import WebSocket
 
 from HTTPHandler import HTTPHandler
 from rorn.HTTPServer import HTTPServer
@@ -17,6 +18,7 @@ boxClasses.update({'base': 'alert', 'info': 'alert-info', 'success': 'alert-succ
 PORT = 8083
 currentThread().name = 'main'
 EventThread().start()
+WebSocket.start(PORT + 1)
 
 server = HTTPServer(('', PORT), HTTPHandler)
 try:

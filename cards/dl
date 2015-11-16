@@ -1,0 +1,16 @@
+#!/bin/bash
+# From http://worldofcardgames.com/
+for type in classic egypt ornamental tango anglo torres ninaste azzedarsan; do
+	mkdir $type
+	cd $type
+	for suit in c d s h; do
+		for rank in `seq 1 13`; do
+			wget "http://staticworldofcardgames.com/pieces/card/$type/1/${rank}$suit.png"
+		done
+		mv 11$suit.png J$suit.png
+		mv 12$suit.png Q$suit.png
+		mv 13$suit.png K$suit.png
+		mv 1$suit.png A$suit.png
+	done
+	cd ..
+done

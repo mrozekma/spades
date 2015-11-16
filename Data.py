@@ -6,9 +6,9 @@ def bidValue(bid):
 	return 0 if bid in ('nil', 'blind') else bid
 
 def findWinner(cards):
-	if not cards:
-		raise ValueError("No cards passed")
-	return sorted(filter(lambda card: card[-1] in (cards[0][-1], 's'), cards), key = ordering.index)[0]
+	if len(filter(None, cards)) == 0:
+		return None
+	return sorted(filter(lambda card: card is not None and card[-1] in (cards[0][-1], 's'), cards), key = ordering.index)[0]
 
 class Game:
 	def __init__(self, logFilename, start, creator, goal, bagLimit):
@@ -64,6 +64,52 @@ class Game:
 			return {team: 0 for team in self.teams}
 		return self.rounds[-1].score
 
+	@property
+	def currentRound(self):
+		if self.finished:
+			return None
+		for round in self.rounds[::-1]:
+			if round is not None:
+				return round
+		return None
+
+	@property
+	def currentTrick(self):
+		if self.currentRound is None:
+			return None
+		for trick in self.currentRound.tricks[::-1]:
+			if trick is not None:
+				return trick
+		return None
+
+	# Used to update websocket clients
+	@property
+	def state(self):
+		rtn = {
+			'game': self.logFilename,
+			'players': self.players,
+		}
+		if self.currentRound is not None:
+			# Round data is in round player order, but the client needs it in game player order
+			def order(data):
+				data = {player: v for player, v in zip(self.currentRound.players, data)}
+				return [data[player] for player in self.players]
+			tricksByWinner = self.currentRound.tricksByWinner
+			rtn['taken'] = [len(tricksByWinner[player]) for player in self.players]
+			rtn['bids'] = order(self.currentRound.bids)
+			if self.currentTrick is not None:
+				# Again for trick order
+				def order(data):
+					data = {player: v for player, v in zip(self.getPlayersStartingWith(self.currentTrick.leader), data)}
+					return [data[player] for player in self.players]
+				rtn['leader'] = self.currentTrick.leader
+				rtn['plays'] = order(self.currentTrick.plays)
+				if None in self.currentTrick.plays:
+					rtn['turn'] = self.getPlayersStartingWith(self.currentTrick.leader)[self.currentTrick.plays.index(None)]
+				if self.currentTrick.plays[0] is not None:
+					rtn['winning'] = self.currentTrick.playersByPlay[findWinner(self.currentTrick.plays)]
+		return rtn
+
 	def out(self):
 		print "Game created by %s, %d goal, %d bags" % (self.creator, self.goal, self.bagLimit)
 		print "  Players: %s" % ', '.join(map(str, self.players))
@@ -96,7 +142,8 @@ class Round:
 	def tricksByWinner(self):
 		rtn = {player: [] for player in self.players}
 		for trick in self.tricks:
-			rtn[trick.winner].append(trick)
+			if trick is not None and trick.winner is not None:
+				rtn[trick.winner].append(trick)
 		return rtn
 
 	@property
@@ -183,12 +230,16 @@ class Trick:
 		return OrderedDict(zip(self.plays, self.round.game.getPlayersStartingWith(self.leader)))
 
 	@property
+	def finished(self):
+		return self.plays[-1] is not None
+
+	@property
 	def win(self):
-		return findWinner(self.plays)
+		return findWinner(self.plays) if self.finished else None
 
 	@property
 	def winner(self):
-		return self.playersByPlay[self.win]
+		return self.playersByPlay[self.win] if self.finished else None
 
 	def out(self):
 		print "    Trick (led by %s): %s" % (self.leader, ' '.join(map(str, self.plays)))

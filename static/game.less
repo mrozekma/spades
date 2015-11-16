@@ -1,12 +1,23 @@
 .current-trick {
 	position: relative;
 	width: 500px;
-	height: 500px;
+	height: 530px;
 	margin: auto;
 
 	.seat {
 		position: absolute;
 		width: 200px;
+
+		.tags {
+			height: 25px;
+			margin-bottom: 15px;
+			.label {
+				width: 64px;
+				/* margin-right: 2px; */
+				margin: 0px 0px 2px ~"calc((200px - 64px) / 2)";
+				display: none;
+			}
+		}
 
 		img.play {
 			width: 64px;
@@ -26,7 +37,7 @@
 					margin-right: 10px;
 				}
 				.progress-text, .progress {
-					visibility: hidden;
+					display: none;
 				}
 			}
 		}

@@ -73,7 +73,7 @@ def setActiveGame(newActiveGame):
 
 def getGames():
 	# Get the raw map (not a LoudMap), and append the active game if there is one
-	rtn = db['games'].m
+	rtn = db['games'].m.copy()
 	if activeGame is not None:
 		rtn[activeGame.logFilename] = activeGame
 	return rtn

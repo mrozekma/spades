@@ -12,9 +12,10 @@ nav['gameplay'] = '/games/%(name)s'
 nav['history'] = '/games/%(name)s/history'
 
 # Seat positions don't matter (as long as play order is preserved), but it's logical to me that the first player is south
+# This order is actually specified in game.js
 seats = ('south', 'west', 'north', 'east')
 
-@get('games/(?P<name>[0-9]{8}_[0-9]{6})', statics = 'game')
+@get('games/(?P<name>[0-9]{8}_[0-9]{6})', statics = ['websocket', 'game'])
 def game(handler, name):
 	logFilename = "%s.log" % name
 	activeGame = getActiveGame()
@@ -32,13 +33,10 @@ def game(handler, name):
 	handler.title(game.friendlyName)
 	nav.out('gameplay', name = name)
 
-	# print "%s<br>" % ' '.join(game.players)
-	# for player in game.players:
-		# print "<img src=\"http://www.gravatar.com/avatar/%s?s=64&d=wavatar&r=x\">" % md5(player)
-
 	print "<div class=\"current-trick\">"
-	for player, seat in zip(game.players, seats):
-		print "<div class=\"seat seat-%s seat-open\" data-player=\"%s\">" % (seat, player)
+	for seat in seats:
+		print "<div class=\"seat seat-%s seat-open\">" % seat
+		print   "<div class=\"tags\"><span class=\"label label-danger tag-turn\">Turn</span><span class=\"label label-success tag-winning\">Winning</span><span class=\"label label-primary tag-lead\">Lead</span></div>"
 		print   "<img class=\"play\" src=\"/card/back\">"
 		print   "<div class=\"bottom\">"
 		print     "<img class=\"avatar\" src=\"/player/-/avatar\">"
@@ -52,14 +50,13 @@ def game(handler, name):
 		print   "</div>"
 		print "</div>"
 	print "</div>"
-
 	print "<br><br>"
 
-	handler.callFromHeader(Chart.include)
+	# handler.callFromHeader(Chart.include)
 
-	c = ScoreChart('score-chart', game)
-	handler.jsOnLoad(c.js)
-	c.placeholder()
+	# c = ScoreChart('score-chart', game)
+	# handler.jsOnLoad(c.js)
+	# c.placeholder()
 
 @get('games/active')
 def gamesActive(handler):
