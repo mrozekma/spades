@@ -15,3 +15,8 @@ def card(handler, card):
 @get('card/back')
 def cardBack(handler):
 	card(handler, 'back')
+
+#TODO This only exists for classic so far
+@get('card/blank')
+def cardBlank(handler):
+	card(handler, 'blank')

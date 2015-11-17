@@ -7,9 +7,10 @@ from rorn.Box import ErrorBox
 
 from os.path import splitext
 
-nav = Nav()
+nav = Nav(brand = 'right')
 nav['gameplay'] = '/games/%(name)s'
 nav['history'] = '/games/%(name)s/history'
+nav['log'] = '//pileus.org/andy/spades/%(name)s.log'
 
 # Seat positions don't matter (as long as play order is preserved), but it's logical to me that the first player is south
 # This order is actually specified in game.js
@@ -41,11 +42,12 @@ def game(handler, name):
 		print   "<div class=\"bottom\">"
 		print     "<img class=\"avatar\" src=\"/player/-/avatar\">"
 		print     "<div class=\"right\">"
-		print       "<div class=\"username\">Open</div><br>"
-		print       "<div class=\"progress-text\">?/?</div>"
-		print       "<div class=\"progress\">"
-		print         "<div class=\"progress-bar\" style=\"width: 0%\"></div>"
-		print       "</div>"
+		print       "<div class=\"username\">Open</div>"
+		print         "<div class=\"tricks\"></div>"
+		# print       "<div class=\"progress-text\">?/?</div>"
+		# print       "<div class=\"progress\">"
+		# print         "<div class=\"progress-bar\" style=\"width: 0%\"></div>"
+		# print       "</div>"
 		print     "</div>"
 		print   "</div>"
 		print "</div>"

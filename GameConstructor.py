@@ -92,9 +92,15 @@ class GameConstructor:
 					self.currentTrick = Trick(self.currentPlayer)
 					self.currentTrick.round = self.currentRound
 					self.emplace(self.currentRound.tricks, self.currentTrick)
+				# Bit of a hack. The frontend wants this info, and I don't want it burrowing into the GameConstructor to get it
+				# This isn't serialized, it's only stored temporarily in the memory model
+				self.currentTrick.thisPlayStart = event['ts']
+				from Log import console
+				console('debug', event['ts'].strftime('%Y-%m-%d %H:%M:%S'))
 				return
 			if event['type'] == 'play':
 				self.emplace(self.currentTrick.plays, event['play'])
+				del self.currentTrick.thisPlayStart
 				if self.filled(self.currentTrick.plays):
 					del self.currentTrick
 					# We wait for round_end or game_end instead of going straight to bidding

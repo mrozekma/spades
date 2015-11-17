@@ -1,4 +1,5 @@
 from collections import OrderedDict
+import time
 
 ordering = [rank + suit for suit in 'sdch' for rank in ['A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2']]
 
@@ -68,10 +69,9 @@ class Game:
 	def currentRound(self):
 		if self.finished:
 			return None
-		for round in self.rounds[::-1]:
-			if round is not None:
-				return round
-		return None
+		if len(self.rounds) == 0:
+			return None
+		return self.rounds[-1]
 
 	@property
 	def currentTrick(self):
@@ -89,7 +89,12 @@ class Game:
 			'game': self.logFilename,
 			'players': self.players,
 		}
-		if self.currentRound is not None:
+		if self.finished: # I don't anticipate this property ever being accessed on finished games, but just in case
+			rtn['description'] = 'Game over'
+		elif self.currentRound is None:
+			rtn['description'] = 'Seating'
+		else:
+			rtn['description'] = "Round %d" % len(self.rounds)
 			# Round data is in round player order, but the client needs it in game player order
 			def order(data):
 				data = {player: v for player, v in zip(self.currentRound.players, data)}
@@ -97,7 +102,10 @@ class Game:
 			tricksByWinner = self.currentRound.tricksByWinner
 			rtn['taken'] = [len(tricksByWinner[player]) for player in self.players]
 			rtn['bids'] = order(self.currentRound.bids)
-			if self.currentTrick is not None:
+			if self.currentTrick is None:
+				rtn['description'] += '&nbsp;&bull;&nbsp;Bidding'
+			else:
+				rtn['description'] += "&nbsp;&bull;&nbsp;Trick %d" % (self.currentRound.tricks.index(self.currentTrick) + 1)
 				# Again for trick order
 				def order(data):
 					data = {player: v for player, v in zip(self.getPlayersStartingWith(self.currentTrick.leader), data)}
@@ -106,6 +114,8 @@ class Game:
 				rtn['plays'] = order(self.currentTrick.plays)
 				if None in self.currentTrick.plays:
 					rtn['turn'] = self.getPlayersStartingWith(self.currentTrick.leader)[self.currentTrick.plays.index(None)]
+					if hasattr(self.currentTrick, 'thisPlayStart'):
+						rtn['turn_started'] = int(time.mktime(self.currentTrick.thisPlayStart.timetuple()) * 1000)
 				if self.currentTrick.plays[0] is not None:
 					rtn['winning'] = self.currentTrick.playersByPlay[findWinner(self.currentTrick.plays)]
 		return rtn

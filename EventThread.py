@@ -1,17 +1,19 @@
-from datetime import datetime
+import calendar
+from datetime import datetime, timedelta
 import lxml.html
 import re
 import requests
 from threading import Thread
-from time import sleep
+import time
 import traceback
 
 import DB
 from DB import db, getGames
 from GameConstructor import GameConstructor
+from WebSocket import WSSpadesHandler
 
 logURL = 'http://pileus.org/andy/spades/'
-period = 30 # seconds
+period = 10 # seconds
 prefix = "(?P<ts>[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}) \\| "
 
 # This could be a little more selective, but I'm lazy
@@ -83,7 +85,7 @@ class EventThread(Thread):
 			except Exception:
 				print "EventThread error"
 				traceback.print_exc()
-			sleep(period)
+			time.sleep(period)
 
 	def tick(self):
 		if self.gameCon is None:
@@ -133,6 +135,8 @@ class EventThread(Thread):
 						if 'play' in g:
 							g['play'] = unpretty(g['play'])
 						event = {'ts': datetime.strptime(g['ts'], '%Y-%m-%d %H:%M:%S'), 'off': self.gameCon.logOffset}
+						# How can timezones be so much work? Someday this is going to get called right as the hour flips over and it's going to be sad times
+						event['ts'] += timedelta(hours = datetime.now().hour - datetime.utcnow().hour)
 						del g['ts']
 						event.update(fn(**g))
 						#TODO Store events, and use them when restarting the app mid-game
@@ -151,6 +155,7 @@ class EventThread(Thread):
 			print "Current score: %s" % self.gameCon.game.score
 			if hasattr(self.gameCon, 'currentRound'):
 				print "Left: %s" % self.gameCon.currentRound.cardsLeft
+			WSSpadesHandler.on_game_change(self.gameCon.game)
 
 	def cachedGet(self, url, etags = {}):
 		headers = {}
