@@ -134,9 +134,9 @@ class EventThread(Thread):
 						# Bit of a hack. We want to rewrite any group that contains a PLAY, but there's no way to tell now. Currently all those groups are named 'play', so we only rewrite those
 						if 'play' in g:
 							g['play'] = unpretty(g['play'])
-						event = {'ts': datetime.strptime(g['ts'], '%Y-%m-%d %H:%M:%S'), 'off': self.gameCon.logOffset}
+						tz = int(round((datetime.now() - datetime.utcnow()).total_seconds() / 3600))
+						event = {'ts': datetime.strptime(g['ts'], '%Y-%m-%d %H:%M:%S') + timedelta(hours = tz), 'off': self.gameCon.logOffset}
 						# How can timezones be so much work? Someday this is going to get called right as the hour flips over and it's going to be sad times
-						event['ts'] += timedelta(hours = datetime.now().hour - datetime.utcnow().hour)
 						del g['ts']
 						event.update(fn(**g))
 						#TODO Store events, and use them when restarting the app mid-game
