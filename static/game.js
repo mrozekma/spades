@@ -1,13 +1,30 @@
 game_name = location.href.split('/').slice(-1)[0];
 
+connection_timer = null;
+attempt_connection = function() {
+	SpadesWS.init();
+}
+
 SpadesWS.on_open(function() {
 	console.log('Websocket open');
 	SpadesWS.send({subscribe: ['game#' + game_name]});
+	if(connection_timer) {
+		clearInterval(connection_timer);
+		connection_timer = null;
+	}
+	$('.disconnected-icon').hide();
+});
+
+SpadesWS.on_close(function() {
+	console.log('Websocket closed');
+	$('.disconnected-icon').show();
+	connection_timer = setInterval(attempt_connection, 15000);
 });
 
 $(document).ready(function() {
 	seats = [$('.seat-south'), $('.seat-west'), $('.seat-north'), $('.seat-east')];
 
+	original_title = $('title').text();
 	turn_clock = null;
 
 	SpadesWS.on_message(function(e, data) {
@@ -20,7 +37,8 @@ $(document).ready(function() {
 			turn_clock = null;
 		}
 
-		$('.navbar .navbar-brand').html(data['description']);
+		$('title').text(data['description'].join(' ') + ' - ' + original_title);
+		$('.navbar .navbar-brand').html(data['description'].join('&nbsp;&bull;&nbsp;'));
 		$('.tags .label').hide();
 		$('.tag-turn').text('Turn');
 		if(data['leader']) {
@@ -52,7 +70,7 @@ $(document).ready(function() {
 					};
 					update_clock();
 					turn_clock = setInterval(update_clock, 1000);
-				})($('.tag-turn', seat), data['turn_started']);
+				})($('.tag-turn', seat), data['turn_started'] + time_off);
 			}
 			$('.tag-turn', seat).css('display', 'block');
 			// For asthetic reasons, we only leave enough room for two rows of tags above each card, and turn takes both
@@ -82,10 +100,12 @@ $(document).ready(function() {
 				taken = data['taken'][i];
 				// For a player with an unknown bid, we count all taken tricks as non-bags and show no out tricks
 				if(bid == null) {
+					tricks.attr('title', 'Took ' + taken + ' ' + (taken == 1 ? 'trick' : 'tricks') + ' (unknown bid)');
 					for(j = 0; j < taken; j++) {
 						tricks.append($('<img/>').attr('src', '/card/back').addClass('taken'));
 					}
 				} else {
+					tricks.attr('title', 'Took ' + taken + '/' + bid + ' ' + (taken == 1 ? 'trick' : 'tricks') + (taken <= bid ? '' : (' (' + (taken - bid) + ' ' + (taken - bid == 1 ? 'bag' : 'bags') + ')')));
 					for(j = 0; j < Math.min(bid, taken); j++) {
 						tricks.append($('<img/>').attr('src', '/card/back').addClass('taken'));
 					}
@@ -98,10 +118,11 @@ $(document).ready(function() {
 				}
 			}
 			if(data['plays']) {
-				$('.play', seat).attr('src', '/card/' + (data['plays'][i] ? data['plays'][i] : 'back'));
+				$('.play', seat).attr('title', data['plays'][i] || '').attr('src', '/card/' + (data['plays'][i] ? data['plays'][i] : 'back'));
 			}
 		}
 	});
 
-	SpadesWS.init();
+	connection_timer = setInterval(attempt_connection, 15000);
+	attempt_connection();
 });

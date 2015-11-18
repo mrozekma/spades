@@ -35,6 +35,7 @@ def game(handler, name):
 	nav.out('gameplay', name = name)
 
 	print "<div class=\"current-trick\">"
+	print "<div class=\"disconnected-icon glyphicon glyphicon-transfer\" title=\"Disconnected from server\"></div>"
 	for seat in seats:
 		print "<div class=\"seat seat-%s seat-open\">" % seat
 		print   "<div class=\"tags\"><span class=\"label label-danger tag-turn\">Turn</span><span class=\"label label-success tag-winning\">Winning</span><span class=\"label label-primary tag-lead\">Lead</span></div>"

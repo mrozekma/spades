@@ -90,11 +90,11 @@ class Game:
 			'players': self.players,
 		}
 		if self.finished: # I don't anticipate this property ever being accessed on finished games, but just in case
-			rtn['description'] = 'Game over'
+			rtn['description'] = ['Game over']
 		elif self.currentRound is None:
-			rtn['description'] = 'Seating'
+			rtn['description'] = ['Seating']
 		else:
-			rtn['description'] = "Round %d" % len(self.rounds)
+			rtn['description'] = ["Round %d" % len(self.rounds)]
 			# Round data is in round player order, but the client needs it in game player order
 			def order(data):
 				data = {player: v for player, v in zip(self.currentRound.players, data)}
@@ -103,9 +103,9 @@ class Game:
 			rtn['taken'] = [len(tricksByWinner[player]) for player in self.players]
 			rtn['bids'] = order(self.currentRound.bids)
 			if self.currentTrick is None:
-				rtn['description'] += '&nbsp;&bull;&nbsp;Bidding'
+				rtn['description'].append('Bidding')
 			else:
-				rtn['description'] += "&nbsp;&bull;&nbsp;Trick %d" % (self.currentRound.tricks.index(self.currentTrick) + 1)
+				rtn['description'].append("Trick %d" % (self.currentRound.tricks.index(self.currentTrick) + 1))
 				# Again for trick order
 				def order(data):
 					data = {player: v for player, v in zip(self.getPlayersStartingWith(self.currentTrick.leader), data)}
