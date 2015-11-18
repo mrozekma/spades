@@ -98,9 +98,9 @@ class Game:
 			# Round data is in round player order, but the client needs it in game player order
 			def order(data):
 				data = {player: v for player, v in zip(self.currentRound.players, data)}
-				return [data[player] for player in self.players]
+				return [data.get(player, None) for player in self.players]
 			tricksByWinner = self.currentRound.tricksByWinner
-			rtn['taken'] = [len(tricksByWinner[player]) for player in self.players]
+			rtn['taken'] = [len(tricksByWinner.get(player, [])) for player in self.players]
 			rtn['bids'] = order(self.currentRound.bids)
 			if self.currentTrick is None:
 				rtn['description'].append('Bidding')
