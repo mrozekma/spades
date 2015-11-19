@@ -12,10 +12,6 @@ nav['gameplay'] = '/games/%(name)s'
 nav['history'] = '/games/%(name)s/history'
 nav['log'] = '//pileus.org/andy/spades/%(name)s.log'
 
-# Seat positions don't matter (as long as play order is preserved), but it's logical to me that the first player is south
-# This order is actually specified in game.js
-seats = ('south', 'west', 'north', 'east')
-
 @get('games/(?P<name>[0-9]{8}_[0-9]{6})', statics = ['websocket', 'game'])
 def game(handler, name):
 	logFilename = "%s.log" % name
@@ -36,22 +32,9 @@ def game(handler, name):
 
 	print "<div class=\"current-trick\">"
 	print "<div class=\"disconnected-icon glyphicon glyphicon-transfer\" title=\"Disconnected from server\"></div>"
-	for seat in seats:
-		print "<div class=\"seat seat-%s seat-open\">" % seat
-		print   "<div class=\"tags\"><span class=\"label label-danger tag-turn\">Turn</span><span class=\"label label-success tag-winning\">Winning</span><span class=\"label label-primary tag-lead\">Lead</span></div>"
-		print   "<img class=\"play\" src=\"/card/back\">"
-		print   "<div class=\"bottom\">"
-		print     "<img class=\"avatar\" src=\"/player/-/avatar\">"
-		print     "<div class=\"right\">"
-		print       "<div class=\"username\">Open</div>"
-		print         "<div class=\"tricks\"></div>"
-		# print       "<div class=\"progress-text\">?/?</div>"
-		# print       "<div class=\"progress\">"
-		# print         "<div class=\"progress-bar\" style=\"width: 0%\"></div>"
-		# print       "</div>"
-		print     "</div>"
-		print   "</div>"
-		print "</div>"
+	for seat in ('south', 'west', 'north', 'east'):
+		# Filled in by javascript
+		print "<div class=\"seat-%s\"></div>" % seat
 	print "</div>"
 	print "<br><br>"
 

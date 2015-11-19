@@ -21,9 +21,27 @@ SpadesWS.on_close(function() {
 	connection_timer = setInterval(attempt_connection, 15000);
 });
 
-$(document).ready(function() {
-	seats = [$('.seat-south'), $('.seat-west'), $('.seat-north'), $('.seat-east')];
+make_seats = function() {
+	rtn = [];
+	// Seat positions don't matter (as long as play order is preserved), but it's logical to me that the first player is south
+	$.each(['south', 'west', 'north', 'east'], function(i, location) {
+		rtn[i] = seat = $('<div/>').addClass('seat seat-open seat-' + location);
+		seat.data('location', location);
+		tags = $('<div/>').addClass('tags').appendTo(seat);
+		tags.append($('<span/>').addClass('label label-danger tag-turn').text('Turn'));
+		tags.append($('<span/>').addClass('label label-success tag-winning').text('Winning'));
+		tags.append($('<span/>').addClass('label label-primary tag-lead').text('Lead'));
+		seat.append($('<img/>').addClass('play').attr('src', '/card/back'));
+		bottom = $('<div/>').addClass('bottom').appendTo(seat);
+		bottom.append($('<img/>').addClass('avatar').attr('src', '/player/-/avatar'));
+		right = $('<div/>').addClass('right').appendTo(bottom);
+		right.append($('<div/>').addClass('username').text('Open'));
+		right.append($('<div/>').addClass('tricks'));
+	});
+	return rtn;
+}
 
+$(document).ready(function() {
 	original_title = $('title').text();
 	turn_clock = null;
 
@@ -37,10 +55,11 @@ $(document).ready(function() {
 			turn_clock = null;
 		}
 
+		seats = make_seats();
 		$('title').text(data['description'].join(' ') + ' - ' + original_title);
 		$('.navbar .navbar-brand').html(data['description'].join('&nbsp;&bull;&nbsp;'));
-		$('.tags .label').hide();
-		$('.tag-turn').text('Turn');
+		$('.tags .label', seats).hide();
+		$('.tag-turn', seats).text('Turn');
 		if(data['leader']) {
 			seat = seats[data['players'].indexOf(data['leader'])];
 			$('.tag-lead', seat).css('display', 'block');
@@ -121,6 +140,11 @@ $(document).ready(function() {
 				$('.play', seat).attr('title', data['plays'][i] || '').attr('src', '/card/' + (data['plays'][i] ? data['plays'][i] : 'back'));
 			}
 		}
+
+		// Replace old seats DOM (if there was one) with the new one
+		$.each(seats, function(_, seat) {
+			$('.seat-' + seat.data('location')).replaceWith(seat);
+		});
 	});
 
 	connection_timer = setInterval(attempt_connection, 15000);

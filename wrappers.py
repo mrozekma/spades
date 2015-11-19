@@ -1,3 +1,4 @@
+import bleach
 from json import dumps as toJS
 
 def header(handler, includes):
@@ -66,7 +67,7 @@ def header(handler, includes):
 	print "<div class=\"content\">"
 
 	print "<div class=\"topbar\">"
-	print "<h1>%s</h1>" % bodyTitle
+	print "<h1>%s</h1>" % bleach.clean(bodyTitle)
 	print "<div class=\"links\">"
 	print "<a href=\"/\">Games</a>"
 	print "</div>"
