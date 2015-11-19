@@ -24,8 +24,8 @@ def games(handler):
 	events = [makeEvent(game) for game in getGames().values()]
 	handler.jsOnReady("makeCalendar(%s);" % toJS(events))
 
-	print "<script src=\"/static/moment.js\" type=\"text/javascript\"></script>"
-	print "<link href=\"/static/fullcalendar.css\" rel=\"stylesheet\" type=\"text/css\" />"
-	print "<script src=\"/static/fullcalendar.js\" type=\"text/javascript\"></script>"
+	print "<script src=\"/static/third-party/moment.js\" type=\"text/javascript\"></script>"
+	print "<link href=\"/static/third-party/fullcalendar.css\" rel=\"stylesheet\" type=\"text/css\" />"
+	print "<script src=\"/static/third-party/fullcalendar.js\" type=\"text/javascript\"></script>"
 	print "<div id=\"calendar\"></div>"
 	print "<br><br>"
