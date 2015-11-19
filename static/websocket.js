@@ -4,7 +4,7 @@ SpadesWS = (function() {
 	port = 8084;
 
 	function init() {
-		socket = new WebSocket('ws://' + window.location.hostname + ':' + port);
+		socket = new WebSocket('ws://' + window.location.hostname + ':' + port + '/ws');
 		socket.onopen = function() {
 			$(event_anchor).trigger('open.spadesws');
 		}

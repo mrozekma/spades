@@ -37,7 +37,7 @@ class WSThread(Thread):
 		self.port = port
 
 	def run(self):
-		app = tornado.web.Application([('/', WSSpadesHandler)])
+		app = tornado.web.Application([('/', WSSpadesHandler), ('/ws', WSSpadesHandler)])
 		app.listen(self.port, '0.0.0.0')
 		console('websocket', "Listening")
 		tornado.ioloop.IOLoop.instance().start()
