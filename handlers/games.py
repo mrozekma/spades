@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from json import dumps as toJS
 from os.path import splitext
 
@@ -14,10 +14,8 @@ def games(handler):
 		if game.finished:
 			event['end'] = game.end
 		else:
-			event['end'] = datetime.now()
+			event['end'] = datetime.utcnow()
 			event['color'] = '#d4604a'
-		# For some unknown reason the new version of fullcalendar is shorting all the events by one day, so we lie about the end date
-		event['end'] += timedelta(days = 1)
 		event['end'] = event['end'].strftime('%Y-%m-%dT%H:%M:%S')
 		return event
 
