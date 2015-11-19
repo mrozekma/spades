@@ -27,14 +27,14 @@ def game(handler, name):
 		ErrorBox.die("Game not found", name)
 	del activeGame
 
-	handler.title(game.friendlyName)
+	handler.title('Loading...') # Filled in by javascript
 	nav.out('gameplay', name = name)
 
 	print "<div class=\"current-trick\">"
 	print "<div class=\"disconnected-icon glyphicon glyphicon-transfer\" title=\"Disconnected from server\"></div>"
 	for seat in ('south', 'west', 'north', 'east'):
 		# Filled in by javascript
-		print "<div class=\"seat-%s\"></div>" % seat
+		print "<div class=\"seat seat-%s\"></div>" % seat
 	print "</div>"
 	print "<br><br>"
 

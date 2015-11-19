@@ -4,6 +4,39 @@
 	height: 515px;
 	margin: auto;
 
+	.pregame-players .pregame-player {
+		position: absolute;
+
+		&:nth-of-type(1) {
+			left: ~"calc((50% - 64px) / 2)";
+			top: ~"calc((50% - 80px) / 2)";
+		}
+
+		&:nth-of-type(2) {
+			right: ~"calc((50% - 64px) / 2)";
+			top: ~"calc((50% - 80px) / 2)";
+		}
+
+		&:nth-of-type(3) {
+			left: ~"calc((50% - 64px) / 2)";
+			bottom: ~"calc((50% - 80px) / 2)";
+		}
+
+		&:nth-of-type(4) {
+			right: ~"calc((50% - 64px) / 2)";
+			bottom: ~"calc((50% - 80px) / 2)";
+		}
+
+		&.seat-open .username {
+			font-style: italic;
+		}
+
+		.username {
+			width: 64px;
+			text-align: center;
+		}
+	}
+
 	.seat {
 		position: absolute;
 		width: 200px;

@@ -104,9 +104,9 @@ class WSSpadesHandler(WSHandler):
 			filename = channel[5:] + '.log'
 			games = getGames()
 			if filename in games:
-				self.sendChannel(channel, games[filename].state)
+				self.sendChannel(channel, games[filename].runState)
 
 	@staticmethod
 	def on_game_change(game):
 		name = os.path.splitext(game.logFilename)[0]
-		WebSocket.sendChannel("game#%s" % name, game.state)
+		WebSocket.sendChannel("game#%s" % name, game.runState)

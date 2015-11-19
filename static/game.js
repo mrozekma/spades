@@ -42,7 +42,6 @@ make_seats = function() {
 }
 
 $(document).ready(function() {
-	original_title = $('title').text();
 	turn_clock = null;
 
 	SpadesWS.on_message(function(e, data) {
@@ -55,9 +54,25 @@ $(document).ready(function() {
 			turn_clock = null;
 		}
 
-		seats = make_seats();
-		$('title').text(data['description'].join(' ') + ' - ' + original_title);
+		$('title').text(data['description'].join(' ') + ' - ' + data['friendly_name'] + ' - Spades');
+		$('h1').text(data['friendly_name']);
 		$('.navbar .navbar-brand').html(data['description'].join('&nbsp;&bull;&nbsp;'));
+
+		// Players aren't seated yet, so don't bother showing all that
+		// Just show a list of players
+		if(data['pregame_players']) {
+			$('.seat').hide();
+			parent = $('<div/>').addClass('pregame-players').appendTo($('.current-trick'));
+			for(i = 0; i < 4; i++) {
+				player = data['pregame_players'][i];
+				box = $('<div/>').addClass('pregame-player').toggleClass('seat-open', player == null).appendTo(parent);
+				box.append($('<img/>').attr('src', '/player/' + (player ? player : '-') + '/avatar'));
+				box.append($('<div/>').addClass('username').text(player ? player : '<open>'));
+			}
+			return;
+		}
+
+		seats = make_seats();
 		$('.tags .label', seats).hide();
 		$('.tag-turn', seats).text('Turn');
 		if(data['leader']) {

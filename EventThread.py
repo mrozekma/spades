@@ -122,6 +122,19 @@ class EventThread(Thread):
 		elif len(data) < self.gameCon.logOffset:
 			raise RuntimeError("Fetched %d-byte log file %s, but next event expected at %d" % (len(data), self.gameCon.logFilename, self.gameCon.logOffset))
 		while self.gameCon and self.gameCon.logOffset < len(data):
+			# For testing (20151103_042128):
+			# ONE_JOINED = 0x7d
+			# THREE_JOINED = 0xda
+			# ALL_JOINED = 0x108
+			# FIRST_BIDDER = 0x161
+			# SECOND_BIDDER = 0x19b
+			# THIRD_BIDDER = 0x1e2
+			# LEAD_PLAY = 0x270
+			# SECOND_PLAY = 0x2a3
+			# THIRD_PLAY = 0x2f2
+			# SECOND_TRICK = 0x394
+			# if self.gameCon.logOffset >= SECOND_TRICK: break #NO
+
 			line = data[self.gameCon.logOffset:data.index('\n', self.gameCon.logOffset)+1]
 			originalLen = len(line)
 			line = unpretty(line)

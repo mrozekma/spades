@@ -37,7 +37,7 @@ class Game:
 
 	@property
 	def friendlyName(self):
-		players = [player or '<open>' for player in self.players]
+		players = [player or '?' for player in self.players]
 		return "%s/%s vs. %s/%s to %d" % (players[0], players[2], players[1], players[3], self.goal)
 
 	@property
@@ -84,21 +84,30 @@ class Game:
 
 	# Used to update websocket clients
 	@property
-	def state(self):
+	def runState(self):
 		rtn = {
 			'game': self.logFilename,
+			'friendly_name': self.friendlyName,
 			'players': self.players,
 		}
 		if self.finished: # I don't anticipate this property ever being accessed on finished games, but just in case
 			rtn['description'] = ['Game over']
 		elif self.currentRound is None:
 			rtn['description'] = ['Seating']
+			# The players list is empty at this point, since teams haven't been assigned
+			# Instead we set the pregame list, and adjust the friendly name accordingly
+			del rtn['players']
+			rtn['pregame_players'] = self.gameCon.players
+			rtn['friendly_name'] = "%s%s and %d more to %d" % (', '.join(rtn['pregame_players']), ', ' if len(rtn['pregame_players']) > 1 else '', 4 - len(rtn['pregame_players']), self.goal)
 		else:
 			rtn['description'] = ["Round %d" % len(self.rounds)]
 			# Round data is in round player order, but the client needs it in game player order
 			def order(data):
 				data = {player: v for player, v in zip(self.currentRound.players, data)}
 				return [data.get(player, None) for player in self.players]
+			if sum(1 if player is None else 0 for player in rtn['players']) == 1: # Process of elimination
+				(lastPlayer,) = set(self.gameCon.players) - set(self.players)
+				rtn['players'] = [player or lastPlayer for player in rtn['players']]
 			tricksByWinner = self.currentRound.tricksByWinner
 			rtn['taken'] = [len(tricksByWinner.get(player, [])) for player in self.players]
 			rtn['bids'] = order(self.currentRound.bids)
@@ -114,8 +123,8 @@ class Game:
 				rtn['plays'] = order(self.currentTrick.plays)
 				if None in self.currentTrick.plays:
 					rtn['turn'] = self.getPlayersStartingWith(self.currentTrick.leader)[self.currentTrick.plays.index(None)]
-					if hasattr(self.currentTrick, 'thisPlayStart'):
-						rtn['turn_started'] = int(time.mktime(self.currentTrick.thisPlayStart.timetuple()) * 1000)
+					if hasattr(self.gameCon, 'thisPlayStart'):
+						rtn['turn_started'] = int(time.mktime(self.gameCon.thisPlayStart.timetuple()) * 1000)
 				if self.currentTrick.plays[0] is not None:
 					rtn['winning'] = self.currentTrick.playersByPlay[findWinner(self.currentTrick.plays)]
 		return rtn
