@@ -31,7 +31,7 @@ make_seats = function() {
 		tags.append($('<span/>').addClass('label label-danger tag-turn').text('Turn'));
 		tags.append($('<span/>').addClass('label label-success tag-winning').text('Winning'));
 		tags.append($('<span/>').addClass('label label-primary tag-lead').text('Lead'));
-		seat.append($('<img/>').addClass('play').attr('src', '/card/back'));
+		seat.append($('<img/>').addClass('card').attr('src', '/card/back'));
 		bottom = $('<div/>').addClass('bottom').appendTo(seat);
 		bottom.append($('<img/>').addClass('avatar').attr('src', '/player/-/avatar'));
 		right = $('<div/>').addClass('right').appendTo(bottom);
@@ -43,6 +43,14 @@ make_seats = function() {
 
 $(document).ready(function() {
 	turn_clock = null;
+
+	$('button.remaining-cards').click(function() {
+		div = $('div.remaining-cards');
+		if(div.length > 0) {
+			div.show();
+			this.remove();
+		}
+	});
 
 	SpadesWS.on_message(function(e, data) {
 		console.log(data);
@@ -115,6 +123,7 @@ $(document).ready(function() {
 			seat = seats[data['players'].indexOf(data['winning'])];
 			$('.tag-winning', seat).css('display', 'block');
 		}
+
 		for(i = 0; i < 4; i++) {
 			seat = seats[i];
 			if(data['players'][i] == null) {
@@ -152,9 +161,39 @@ $(document).ready(function() {
 				}
 			}
 			if(data['plays']) {
-				$('.play', seat).attr('title', data['plays'][i] || '').attr('src', '/card/' + (data['plays'][i] ? data['plays'][i] : 'back'));
+				$('.card', seat).attr('title', data['plays'][i] || '').attr('src', '/card/' + (data['plays'][i] ? data['plays'][i] : 'back'));
 			}
 		}
+
+		parent = $('<table/>').addClass('past-tricks');
+		if(data['players'][3]) { // All players known
+			row = $('<tr/>').appendTo(parent);
+			$.each(data['players'], function(i, player) {
+				cell = $('<th/>').addClass('player').appendTo(row);
+				cell.append($('<img/>').addClass('avatar').attr('src', '/player/' + player + '/avatar'));
+				cell.append($('<div/>').addClass('username').text(player));
+			});
+			$.each(data['past_tricks'], function(i, trick) {
+				row = $('<tr/>').appendTo(parent);
+				for(i = 0; i < 4; i++) {
+					cell = $('<td/>').appendTo(row);
+					if(trick['leader'] == data['players'][i]) {
+						cell.append($('<span/>').addClass('label label-primary tag-lead').text('Lead'));
+					}
+					if(trick['winner'] == data['players'][i]) {
+						cell.append($('<span/>').addClass('label label-success tag-winning').text('Won'));
+					}
+					cell.append($('<img/>').addClass('card').attr('src', '/card/' + trick['plays'][i]));
+				}
+			});
+		}
+		$('.past-tricks').replaceWith(parent);
+
+		box = $('div.remaining-cards');
+		box.empty();
+		$.each(data['deck'], function(i, card) {
+			box.append($('<img/>').addClass('card').attr('src', '/card/' + card));
+		});
 
 		// Replace old seats DOM (if there was one) with the new one
 		$.each(seats, function(_, seat) {

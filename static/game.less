@@ -52,7 +52,7 @@
 			}
 		}
 
-		img.play {
+		img.card {
 			width: 64px;
 			margin: 0px 0px 10px ~"calc((200px - 64px) / 2)";
 		}
@@ -115,5 +115,49 @@
 		font-size: 24px;
 		color: #f00;
 		cursor: default;
+	}
+}
+
+//TODO Probably convert to a table and get rid of the fixed width columns
+table.past-tricks {
+	border: 0px;
+	border-collapse: separate;
+	border-spacing: 50px 20px;
+	tr {
+		height: ~"calc(64px + (16px + 2px) * 2)";
+		th {
+			width: 64px;
+			min-width: 64px;
+			max-width: 64px;
+			.username {
+				margin-top: 4px;
+				text-align: center;
+			}
+		}
+		td {
+			vertical-align: bottom;
+			.label {
+				display: block;
+				margin-bottom: 2px;
+			}
+			img.card {
+				width: 64px;
+			}
+		}
+	}
+}
+
+button.remaining-cards {
+	width: 192px;
+	height: 32px;
+	margin-left: 32px;
+}
+
+div.remaining-cards {
+	display: none;
+	margin-left: 50px;
+	img.card {
+		width: 64px;
+		margin-right: -44px;
 	}
 }

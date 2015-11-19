@@ -115,6 +115,7 @@ class Game:
 				rtn['description'].append('Bidding')
 			else:
 				rtn['description'].append("Trick %d" % (self.currentRound.tricks.index(self.currentTrick) + 1))
+				rtn['deck'] = self.currentRound.cardsLeft
 				# Again for trick order
 				def order(data):
 					data = {player: v for player, v in zip(self.getPlayersStartingWith(self.currentTrick.leader), data)}
@@ -127,6 +128,16 @@ class Game:
 						rtn['turn_started'] = int(time.mktime(self.gameCon.thisPlayStart.timetuple()) * 1000)
 				if self.currentTrick.plays[0] is not None:
 					rtn['winning'] = self.currentTrick.playersByPlay[findWinner(self.currentTrick.plays)]
+				rtn['past_tricks'] = []
+				for trick in self.currentRound.tricks:
+					if trick == self.currentTrick:
+						break
+					rtn['past_tricks'].append({
+						# Continue to keep Javascript play arrays in game order, despite how Trick stores them
+						'plays': [trick.playsByPlayer[player] for player in self.players],
+						'leader': trick.leader,
+						'winner': trick.winner,
+					})
 		return rtn
 
 	def out(self):

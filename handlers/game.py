@@ -37,6 +37,10 @@ def game(handler, name):
 		print "<div class=\"seat seat-%s\"></div>" % seat
 	print "</div>"
 	print "<br><br>"
+	print "<h2>Previous tricks</h2>"
+	print "<table class=\"past-tricks\"></table>"
+	print "<h2>Remaining cards</h2>"
+	print "<button class=\"remaining-cards\">Show unplayed cards</button><div class=\"remaining-cards\"></div><br><br>"
 
 	# handler.callFromHeader(Chart.include)
 
