@@ -54,6 +54,9 @@ $(document).ready(function() {
 
 	SpadesWS.on_message(function(e, data) {
 		console.log(data);
+		if(data['description'] == 'Game over') {
+			window.location += '/history';
+		}
 		// Figure out difference between local time and server time
 		time_off = Date.now() - data['now'];
 
@@ -167,16 +170,20 @@ $(document).ready(function() {
 
 		parent = $('<table/>').addClass('past-tricks');
 		if(data['players'][3]) { // All players known
-			row = $('<tr/>').appendTo(parent);
+			header = $('<tr/>').appendTo(parent);
+			header.append($('<th/>'));
 			$.each(data['players'], function(i, player) {
-				cell = $('<th/>').addClass('player').appendTo(row);
+				cell = $('<th/>').addClass('player').appendTo(header);
 				cell.append($('<img/>').addClass('avatar').attr('src', '/player/' + player + '/avatar'));
 				cell.append($('<div/>').addClass('username').text(player));
 			});
 			$.each(data['past_tricks'], function(i, trick) {
-				row = $('<tr/>').appendTo(parent);
+				// We insert after the header instead of appending to the table so that the tricks will be in reverse order
+				// row = $('<tr/>').appendTo(parent);
+				row = $('<tr/>').insertAfter(header);
+				$('<td/>').addClass('trick-number').append($('<span/>').addClass('label label-default').text('Trick ' + (i + 1))).appendTo(row);
 				for(i = 0; i < 4; i++) {
-					cell = $('<td/>').appendTo(row);
+					cell = $('<td/>').addClass('trick').appendTo(row);
 					if(trick['leader'] == data['players'][i]) {
 						cell.append($('<span/>').addClass('label label-primary tag-lead').text('Lead'));
 					}
@@ -191,9 +198,12 @@ $(document).ready(function() {
 
 		box = $('div.remaining-cards');
 		box.empty();
-		$.each(data['deck'], function(i, card) {
-			box.append($('<img/>').addClass('card').attr('src', '/card/' + card));
-		});
+		for(i = 0; i < data['deck'].length; i++) {
+			if(i > 0 && data['deck'][i].charAt(data['deck'][i].length - 1) != data['deck'][i - 1].charAt(data['deck'][i - 1].length - 1)) {
+				box.append($('<br/>'));
+			}
+			box.append($('<img/>').addClass('card').attr('src', '/card/' + data['deck'][i]));
+		}
 
 		// Replace old seats DOM (if there was one) with the new one
 		$.each(seats, function(_, seat) {

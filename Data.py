@@ -90,7 +90,7 @@ class Game:
 			'friendly_name': self.friendlyName,
 			'players': self.players,
 		}
-		if self.finished: # I don't anticipate this property ever being accessed on finished games, but just in case
+		if self.finished: # The only time this propery should be accessed by finished games is if they were already open in a client; otherwise the client should have been redirected on page load
 			rtn['description'] = ['Game over']
 		elif self.currentRound is None:
 			rtn['description'] = ['Seating']

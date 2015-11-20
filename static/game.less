@@ -1,8 +1,19 @@
+.cols {
+	margin: auto;
+
+	.col {
+		display: inline-block;
+		vertical-align: top;
+		margin-left: 75px;
+	}
+}
+
 .current-trick {
 	position: relative;
 	width: 500px;
 	height: 515px;
-	margin: auto;
+	/* margin: auto; */
+	margin-bottom: 20px;
 
 	.pregame-players .pregame-player {
 		position: absolute;
@@ -118,14 +129,14 @@
 	}
 }
 
-//TODO Probably convert to a table and get rid of the fixed width columns
 table.past-tricks {
 	border: 0px;
 	border-collapse: separate;
 	border-spacing: 50px 20px;
+	margin-left: -40px;
 	tr {
 		height: ~"calc(64px + (16px + 2px) * 2)";
-		th {
+		th:not(:first-child) {
 			width: 64px;
 			min-width: 64px;
 			max-width: 64px;
@@ -136,7 +147,18 @@ table.past-tricks {
 		}
 		td {
 			vertical-align: bottom;
-			.label {
+			position: relative;
+			&.trick-number {
+				.label {
+					position: absolute;
+					bottom: 33px;
+					left: -15px;
+					width: 100px;
+					margin-bottom: 10px;
+					transform: rotate(-90deg);
+				}
+			}
+			&.trick .label {
 				display: block;
 				margin-bottom: 2px;
 			}
@@ -150,14 +172,18 @@ table.past-tricks {
 button.remaining-cards {
 	width: 192px;
 	height: 32px;
-	margin-left: 32px;
 }
 
 div.remaining-cards {
 	display: none;
-	margin-left: 50px;
 	img.card {
+		display: inline-block;
 		width: 64px;
 		margin-right: -44px;
+		margin-bottom: -60px;
+	}
+	max-width: 100%;
+	img:nth-of-type(13n) {
+		/* Can't figure out the right way to line-break here, ended up just doing it in Javascript */
 	}
 }
