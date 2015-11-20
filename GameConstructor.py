@@ -62,6 +62,7 @@ class GameConstructor:
 		if self.state == 'bidding':
 			if event['type'] == 'bidding':
 				self.currentPlayer = event['who']
+				self.thisBidStart = event['ts'] # This is used by Game.runState
 				if hasattr(self, 'players'):
 					if not event['who'] in self.players:
 						raise RuntimeError("Bidding player %s not seated" % event['who'])
@@ -81,7 +82,7 @@ class GameConstructor:
 			if event['type'] == 'bid':
 				self.emplace(self.currentRound.players, self.currentPlayer)
 				self.emplace(self.currentRound.bids, event['bid'])
-				del self.currentPlayer
+				del self.currentPlayer, self.thisBidStart
 				return
 			if event['type'] == 'nil_signal':
 				# A nil_signal in the bidding state must not be the last player (see nil_signal in the playing state)
