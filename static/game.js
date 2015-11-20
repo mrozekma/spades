@@ -168,6 +168,11 @@ $(document).ready(function() {
 			}
 		}
 
+		// Replace old seats DOM with the new one
+		$.each(seats, function(_, seat) {
+			$('.seat-' + seat.data('location')).replaceWith(seat);
+		});
+
 		parent = $('<table/>').addClass('past-tricks');
 		if(data['players'][3]) { // All players known
 			header = $('<tr/>').appendTo(parent);
@@ -177,7 +182,7 @@ $(document).ready(function() {
 				cell.append($('<img/>').addClass('avatar').attr('src', '/player/' + player + '/avatar'));
 				cell.append($('<div/>').addClass('username').text(player));
 			});
-			$.each(data['past_tricks'], function(i, trick) {
+			$.each(data['past_tricks'] || [], function(i, trick) {
 				// We insert after the header instead of appending to the table so that the tricks will be in reverse order
 				// row = $('<tr/>').appendTo(parent);
 				row = $('<tr/>').insertAfter(header);
@@ -198,17 +203,12 @@ $(document).ready(function() {
 
 		box = $('div.remaining-cards');
 		box.empty();
-		for(i = 0; i < data['deck'].length; i++) {
+		for(i = 0; i < (data['deck'] ? data['deck'].length : 0); i++) {
 			if(i > 0 && data['deck'][i].charAt(data['deck'][i].length - 1) != data['deck'][i - 1].charAt(data['deck'][i - 1].length - 1)) {
 				box.append($('<br/>'));
 			}
 			box.append($('<img/>').addClass('card').attr('src', '/card/' + data['deck'][i]));
 		}
-
-		// Replace old seats DOM (if there was one) with the new one
-		$.each(seats, function(_, seat) {
-			$('.seat-' + seat.data('location')).replaceWith(seat);
-		});
 	});
 
 	connection_timer = setInterval(attempt_connection, 15000);

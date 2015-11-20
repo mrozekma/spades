@@ -113,6 +113,8 @@ class Game:
 			rtn['bids'] = order(self.currentRound.bids)
 			if self.currentTrick is None:
 				rtn['description'].append('Bidding')
+				if hasattr(self.gameCon, 'currentPlayer'):
+					rtn['turn'] = self.gameCon.currentPlayer
 			else:
 				rtn['description'].append("Trick %d" % (self.currentRound.tricks.index(self.currentTrick) + 1))
 				rtn['deck'] = self.currentRound.cardsLeft
