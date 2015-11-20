@@ -117,6 +117,7 @@ class Game:
 					rtn['turn'] = self.gameCon.currentPlayer
 					if hasattr(self.gameCon, 'thisBidStart'):
 						rtn['turn_started'] = int(time.mktime(self.gameCon.thisBidStart.timetuple()) * 1000)
+				rtn['deck'] = ordering
 			else:
 				rtn['description'].append("Trick %d" % (self.currentRound.tricks.index(self.currentTrick) + 1))
 				rtn['deck'] = self.currentRound.cardsLeft
