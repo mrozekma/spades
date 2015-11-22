@@ -73,21 +73,34 @@ class GameConstructor:
 					self.currentRound = Round()
 					self.currentRound.game = self.game
 					self.game.rounds.append(self.currentRound)
-				# Currently we have no immediate event for the last bid, so we switch states here. We figure out the last bidder by process of elimination, and leave the last bid unset
-				if self.currentRound.bids[-2] is not None: # We have the second-to-last bid
-					(lastPlayer,) = set(self.game.players) - set(self.currentRound.players)
-					self.emplace(self.currentRound.players, lastPlayer)
-					self.state = 'playing'
 				return
 			if event['type'] == 'bid':
 				self.emplace(self.currentRound.players, self.currentPlayer)
 				self.emplace(self.currentRound.bids, event['bid'])
 				del self.currentPlayer, self.thisBidStart
+				if self.currentRound.bids[-1] is not None:
+					self.state = 'playing'
+				return
+			if event['type'] == 'bid_recap':
+				self.emplace(self.currentRound.players, self.currentPlayer)
+				self.emplace(self.currentRound.bids, event['bids'][self.currentPlayer])
+				del self.currentPlayer, self.thisBidStart
+				self.state = 'playing'
 				return
 			if event['type'] == 'nil_signal':
 				# A nil_signal in the bidding state must not be the last player (see nil_signal in the playing state)
 				# We get non-final-player nil bids from bid events, so we can ignore this
 				return
+
+			# In older logs, there was no event for the last bid. If we see a 'playing' event while looking for the last bid, we record the last player and switch to
+			# the playing state, leaving the last bid unset. It will be filled in by the round_summary event at the end of the round
+			if event['type'] == 'playing' and self.currentRound.bids[-1] is None and self.currentRound.bids[-2] is not None:
+				self.emplace(self.currentRound.players, self.currentPlayer)
+				del self.currentPlayer, self.thisBidStart
+				self.state = 'playing'
+				# Re-pump this event in the playing state
+				return self.pump(event)
+
 			self.mismatch(event)
 
 		if self.state == 'playing':

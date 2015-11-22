@@ -23,7 +23,7 @@ def game(handler, name):
 		else:
 			ErrorBox.die("Game not found", name)
 
-	handler.title('Loading...') # Filled in by javascript
+	handler.title(game.friendlyName)
 	nav.out('gameplay', name = name)
 
 	print "<div class=\"cols\">"
