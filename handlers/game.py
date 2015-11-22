@@ -8,7 +8,7 @@ from rorn.Box import ErrorBox
 from os.path import splitext
 
 nav = Nav(brand = 'right')
-nav['gameplay'] = '/games/%(name)s'
+nav['current round'] = '/games/%(name)s'
 nav['history'] = '/games/%(name)s/history'
 nav['log'] = '//pileus.org/andy/spades/%(name)s.log'
 
@@ -24,7 +24,7 @@ def game(handler, name):
 			ErrorBox.die("Game not found", name)
 
 	handler.title(game.friendlyName)
-	nav.out('gameplay', name = name)
+	nav.out('current round', name = name)
 
 	print "<div class=\"cols\">"
 	print "<div class=\"current-trick col\">"

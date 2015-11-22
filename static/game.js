@@ -41,6 +41,26 @@ make_seats = function() {
 	return rtn;
 }
 
+msToString = function(ts) {
+	ts /= 1000;
+	hours = Math.floor(ts / (60 * 60));
+	minutes = Math.floor((ts - hours * 60 * 60) / 60);
+	seconds = Math.floor(ts - (hours * 60 * 60) - (minutes * 60));
+	rtn = "";
+	if(hours > 0) {
+		rtn += hours + ":";
+	}
+	if(minutes < 10) {
+		rtn += "0";
+	}
+	rtn += minutes + ":";
+	if(seconds < 10) {
+		rtn += "0";
+	}
+	rtn += seconds;
+	return rtn;
+}
+
 $(document).ready(function() {
 	turn_clock = null;
 
@@ -95,23 +115,7 @@ $(document).ready(function() {
 			if(data['turn_started']) {
 				(function(anchor, start) {
 					update_clock = function() {
-						elapsed = (Date.now() - start) / 1000;
-						hours = Math.floor(elapsed / (60 * 60));
-						minutes = Math.floor((elapsed - hours * 60 * 60) / 60);
-						seconds = Math.floor(elapsed - (hours * 60 * 60) - (minutes * 60));
-						txt = "";
-						if(hours > 0) {
-							txt += hours + ":";
-						}
-						if(minutes < 10) {
-							txt += "0";
-						}
-						txt += minutes + ":";
-						if(seconds < 10) {
-							txt += "0";
-						}
-						txt += seconds;
-						anchor.html('Turn<br>' + txt);
+						anchor.html('Turn<br>' + msToString(Date.now() - start));
 					};
 					update_clock();
 					turn_clock = setInterval(update_clock, 1000);
@@ -186,7 +190,7 @@ $(document).ready(function() {
 				// We insert after the header instead of appending to the table so that the tricks will be in reverse order
 				// row = $('<tr/>').appendTo(parent);
 				row = $('<tr/>').insertAfter(header);
-				$('<td/>').addClass('trick-number').append($('<span/>').addClass('label label-default').text('Trick ' + (i + 1))).appendTo(row);
+				$('<td/>').addClass('trick-number').append($('<span/>').addClass('label label-default').html('Trick ' + (i + 1) + '&nbsp;&nbsp;(' + msToString(trick['duration']) + ')')).appendTo(row);
 				for(i = 0; i < 4; i++) {
 					cell = $('<td/>').addClass('trick').appendTo(row);
 					if(trick['leader'] == data['players'][i]) {

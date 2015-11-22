@@ -1,6 +1,8 @@
 from collections import OrderedDict
 import time
 
+from utils import *
+
 ordering = [rank + suit for suit in 'sdch' for rank in ['A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2']]
 
 def bidValue(bid):
@@ -116,7 +118,7 @@ class Game:
 				if hasattr(self.gameCon, 'currentPlayer'):
 					rtn['turn'] = self.gameCon.currentPlayer
 					if hasattr(self.gameCon, 'thisBidStart'):
-						rtn['turn_started'] = int(time.mktime(self.gameCon.thisBidStart.timetuple()) * 1000)
+						rtn['turn_started'] = dtToJSTime(self.gameCon.thisBidStart)
 				rtn['deck'] = ordering
 			else:
 				rtn['description'].append("Trick %d" % (self.currentRound.tricks.index(self.currentTrick) + 1))
@@ -130,7 +132,7 @@ class Game:
 				if None in self.currentTrick.plays:
 					rtn['turn'] = self.getPlayersStartingWith(self.currentTrick.leader)[self.currentTrick.plays.index(None)]
 					if hasattr(self.gameCon, 'thisPlayStart'):
-						rtn['turn_started'] = int(time.mktime(self.gameCon.thisPlayStart.timetuple()) * 1000)
+						rtn['turn_started'] = dtToJSTime(self.gameCon.thisPlayStart)
 				if self.currentTrick.plays[0] is not None:
 					rtn['winning'] = self.currentTrick.playersByPlay[findWinner(self.currentTrick.plays)]
 				rtn['past_tricks'] = []
@@ -142,6 +144,7 @@ class Game:
 						'plays': [trick.playsByPlayer[player] for player in self.players],
 						'leader': trick.leader,
 						'winner': trick.winner,
+						'duration': dtToJSTime(trick.end) - dtToJSTime(trick.start),
 					})
 		return rtn
 
@@ -152,13 +155,15 @@ class Game:
 			round.out()
 
 class Round:
-	def __init__(self):
+	def __init__(self, start):
+		self.start = start
+		self.end = None
 		self.players = [None] * 4
 		self.bids = [None] * 4
 		self.tricks = [None] * 13
 
 	def __getstate__(self):
-		return {k: getattr(self, k) for k in ('players', 'bids', 'tricks')}
+		return {k: getattr(self, k) for k in ('start', 'end', 'players', 'bids', 'tricks')}
 
 	def __setstate__(self, v):
 		self.__dict__ = v
@@ -252,9 +257,17 @@ class Round:
 				trick.out()
 
 class Trick:
-	def __init__(self, leader):
+	def __init__(self, start, leader):
+		self.start = start
+		self.end = None
 		self.leader = leader
 		self.plays = [None] * 4
+
+	def __getstate__(self):
+		return {k: getattr(self, k) for k in ('start', 'end', 'leader', 'plays')}
+
+	def __setstate__(self, v):
+		self.__dict__ = v
 
 	@property
 	def playsByPlayer(self):

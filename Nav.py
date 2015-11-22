@@ -19,6 +19,6 @@ class Nav:
 			print "<div class=\"navbar-right\"><div class=\"navbar-brand\">%s</div>&nbsp;&nbsp;</div>" % self.brandText
 		print "<ul class=\"nav navbar-nav\">"
 		for tab in self.tabs:
-			print "<li%s><a href=\"%s\">%s</a></li>" % (' class="active"' if tab['name'] == where else '', tab['path'] % kw, tab['name'].capitalize())
+			print "<li%s><a href=\"%s\">%s</a></li>" % (' class="active"' if tab['name'] == where else '', tab['path'] % kw, tab['name'].title())
 		print "</ul>"
 		print "</nav>"

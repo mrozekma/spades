@@ -70,7 +70,7 @@ class GameConstructor:
 					if self.filled(self.game.players):
 						del self.players
 				if not hasattr(self, 'currentRound'):
-					self.currentRound = Round()
+					self.currentRound = Round(event['ts'])
 					self.currentRound.game = self.game
 					self.game.rounds.append(self.currentRound)
 				return
@@ -107,7 +107,7 @@ class GameConstructor:
 			if event['type'] == 'playing':
 				self.currentPlayer = event['who']
 				if not hasattr(self, 'currentTrick'):
-					self.currentTrick = Trick(self.currentPlayer)
+					self.currentTrick = Trick(event['ts'], self.currentPlayer)
 					self.currentTrick.round = self.currentRound
 					self.emplace(self.currentRound.tricks, self.currentTrick)
 				self.thisPlayStart = event['ts'] # This is used by Game.runState
@@ -116,6 +116,7 @@ class GameConstructor:
 				self.emplace(self.currentTrick.plays, event['play'])
 				del self.thisPlayStart
 				if self.filled(self.currentTrick.plays):
+					self.currentTrick.end = event['ts']
 					del self.currentTrick
 					# We wait for round_end or game_end instead of going straight to bidding
 					# if self.filled(self.currentRound.tricks):
@@ -123,6 +124,7 @@ class GameConstructor:
 						# self.state = 'bidding'
 				return
 			if event['type'] == 'round_summary':
+				self.currentRound.end = event['ts']
 				# Using the power of subtraction, we can figure out what the last bid was this round
 				if self.currentRound.bids[-1] is None and self.currentRound.players[-1] in event['who']:
 					missingPlayer = self.currentRound.players[-1]
