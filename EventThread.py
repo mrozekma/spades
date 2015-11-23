@@ -27,7 +27,7 @@ eventPatterns = {
 	"(?P<user>USER): you bid first!": lambda user: {'type': 'bidding', 'who': user},
 	"(?P<user>USER): it is your bid!": lambda user: {'type': 'bidding', 'who': user},
 	"(?P<user>USER): it is your bid! \\(.*:(?P<bid>NUMBER|nil|blind)\\)": [lambda bid, **kw: {'type': 'bid', 'bid': bid if bid in ('nil', 'blind') else int(bid)}, lambda user, **kw: {'type': 'bidding', 'who': user}],
-	"(?:Playing with NUMBER bags!|No bags!|Fighting for NUMBER tricks!) \\(.*:(?P<bid>NUMBER|nil|blind)\\)": lambda bid: {'type': bid, 'bid': bid if bid in ('nil', 'blind') else int(bid)},
+	"(?:Playing with NUMBER bags!|No bags!|Fighting for NUMBER tricks!) \\(.*:(?P<bid>NUMBER|nil|blind)\\)": lambda bid: {'type': 'bid', 'bid': bid if bid in ('nil', 'blind') else int(bid)},
 	"(?P<user>USER): you have the opening lead!": lambda user: {'type': 'playing', 'who': user},
 	"(?P<user>USER): it is your turn!": lambda user: {'type': 'playing', 'who': user},
 	"(?P<user>USER): it is your turn! \\(.*(?P<play>PLAY)\\)": [lambda play, **kw: {'type': 'play', 'play': play}, lambda user, **kw: {'type': 'playing', 'who': user}],
@@ -42,7 +42,7 @@ eventPatterns = {
 	"(?P<user>USER) goes blind nil!": lambda user: {'type': 'nil_signal', 'who': user, 'bid': 'blind'},
 
 	# Old form of the final bid message
-	"(?P<user1>USER)/(?P<user2>USER) bid (?P<bid1>NUMBER|nil|blind)/(?P<bid2>NUMBER|nil|blind), (?P<user3>USER)/(?P<user4>USER) bid (?P<bid3>NUMBER|nil|blind)/(?P<bid4>NUMBER|nil|blind), (?P<bags>NUMBER) bags remain": lambda user1, user2, user3, user4, bid1, bid2, bid3, bid4, bags: {'type': 'bid_recap', 'bids': {user1: bid1, user2: bid2, user3: bid3, user4: bid4}},
+	"(?P<user1>USER)/(?P<user2>USER) bid (?P<bid1>NUMBER|nil|blind)/(?P<bid2>NUMBER|nil|blind), (?P<user3>USER)/(?P<user4>USER) bid (?P<bid3>NUMBER|nil|blind)/(?P<bid4>NUMBER|nil|blind), (?P<bags>NUMBER) bags remain": lambda user1, user2, user3, user4, bid1, bid2, bid3, bid4, bags: {'type': 'bid_recap', 'bids': {user1: bid1 if bid1 in ('nil', 'blind') else int(bid1), user2: bid2 if bid2 in ('nil', 'blind') else int(bid2), user3: bid3 if bid3 in ('nil', 'blind') else int(bid3), user4: bid4 if bid4 in ('nil', 'blind') else int(bid4)}},
 
 	# These are unnecessary messages and generate no events
 	"Round over!": None,
