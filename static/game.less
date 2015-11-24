@@ -1,4 +1,14 @@
+.disconnected-icon {
+	position: absolute;
+	right: 0px;
+	font-size: 24px;
+	color: #f00;
+	cursor: default;
+}
+
 .cols {
+	display: none;
+	position: relative;
 	margin: auto;
 
 	.col {
@@ -38,10 +48,6 @@
 			bottom: ~"calc((50% - 80px) / 2)";
 		}
 
-		&.seat-open .username {
-			font-style: italic;
-		}
-
 		.username {
 			width: 64px;
 			text-align: center;
@@ -57,10 +63,10 @@
 			height: 25px;
 			margin-bottom: 15px;
 			.label {
+				display: block;
 				width: 64px;
 				/* margin-right: 2px; */
 				margin: 0px 0px 2px ~"calc((200px - 64px) / 2)";
-				display: none;
 			}
 		}
 
@@ -98,10 +104,6 @@
 			}
 		}
 
-		&.seat-open .username {
-			font-style: italic;
-		}
-
 		&.seat-north {
 			left: ~"calc((500px - 200px) / 2)";
 			transform: rotate(180deg);
@@ -123,21 +125,13 @@
 			bottom: 0px;
 		}
 	}
-
-	.disconnected-icon {
-		position: absolute;
-		right: 0px;
-		font-size: 24px;
-		color: #f00;
-		cursor: default;
-	}
 }
 
 table.past-tricks {
 	border: 0px;
 	border-collapse: separate;
 	border-spacing: 50px 20px;
-	margin-left: -40px;
+	margin-left: -60px;
 	tr {
 		height: ~"calc(64px + (16px + 2px) * 2)";
 		th:not(:first-child) {
@@ -173,6 +167,10 @@ table.past-tricks {
 	}
 }
 
+.seat-open .username {
+	font-style: italic;
+}
+
 button.remaining-cards {
 	width: 192px;
 	height: 32px;
@@ -180,14 +178,14 @@ button.remaining-cards {
 
 div.remaining-cards {
 	display: none;
+	max-width: 100%;
 	img.card {
 		display: inline-block;
 		width: 64px;
 		margin-right: -44px;
 		margin-bottom: -60px;
 	}
-	max-width: 100%;
 	img:nth-of-type(13n) {
-		/* Can't figure out the right way to line-break here, ended up just doing it in Javascript */
+		/* Can't figure out the right way to line-break here, ended up just doing it in HTML */
 	}
 }

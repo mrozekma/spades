@@ -21,26 +21,6 @@ SpadesWS.on_close(function() {
 	connection_timer = setInterval(attempt_connection, 15000);
 });
 
-make_seats = function() {
-	rtn = [];
-	// Seat positions don't matter (as long as play order is preserved), but it's logical to me that the first player is south
-	$.each(['south', 'west', 'north', 'east'], function(i, location) {
-		rtn[i] = seat = $('<div/>').addClass('seat seat-open seat-' + location);
-		seat.data('location', location);
-		tags = $('<div/>').addClass('tags').appendTo(seat);
-		tags.append($('<span/>').addClass('label label-danger tag-turn').text('Turn'));
-		tags.append($('<span/>').addClass('label label-success tag-winning').text('Winning'));
-		tags.append($('<span/>').addClass('label label-primary tag-lead').text('Lead'));
-		seat.append($('<img/>').addClass('card').attr('src', '/card/back'));
-		bottom = $('<div/>').addClass('bottom').appendTo(seat);
-		bottom.append($('<img/>').addClass('avatar').attr('src', '/player/-/avatar'));
-		right = $('<div/>').addClass('right').appendTo(bottom);
-		right.append($('<div/>').addClass('username').text('Open'));
-		right.append($('<div/>').addClass('tricks'));
-	});
-	return rtn;
-}
-
 msToString = function(ts) {
 	ts /= 1000;
 	hours = Math.floor(ts / (60 * 60));
@@ -61,15 +41,31 @@ msToString = function(ts) {
 	return rtn;
 }
 
+set_player = function(handle, player) {
+	handle.toggleClass('seat-open', player == null);
+	url = '/player/' + (player ? player : '-') + '/avatar';
+	username = player ? player : '<open>';
+	if($('.avatar', handle).attr('src') != url) {
+		$('.avatar', handle).attr('src', url);
+	}
+	if($('.username', handle).text() != username) {
+		$('.username', handle).text(username);
+	}
+}
+
+set_card = function(handle, card) {
+	url = '/card/' + card;
+	if(handle.attr('src') != url) {
+		handle.attr('src', url);
+	}
+}
+
 $(document).ready(function() {
 	turn_clock = null;
 
 	$('button.remaining-cards').click(function() {
-		div = $('div.remaining-cards');
-		if(div.length > 0) {
-			div.show();
-			this.remove();
-		}
+		$('div.remaining-cards').show();
+		this.remove();
 	});
 
 	SpadesWS.on_message(function(e, data) {
@@ -80,6 +76,8 @@ $(document).ready(function() {
 		// Figure out difference between local time and server time
 		time_off = Date.now() - data['now'];
 
+		/** Current Trick **/
+
 		if(turn_clock) {
 			clearInterval(turn_clock);
 			turn_clock = null;
@@ -89,93 +87,112 @@ $(document).ready(function() {
 		$('h1').text(data['friendly_name']);
 		$('.navbar .navbar-brand').html(data['description'].join('&nbsp;&bull;&nbsp;'));
 
+		$('.cols').show();
+
 		// Players aren't seated yet, so don't bother showing all that
 		// Just show a list of players
 		if(data['pregame_players']) {
 			$('.seat').hide();
-			parent = $('<div/>').addClass('pregame-players').appendTo($('.current-trick'));
+			$('.pregame-players').show();
+			boxes = $('.pregame-player');
 			for(i = 0; i < 4; i++) {
-				player = data['pregame_players'][i];
-				box = $('<div/>').addClass('pregame-player').toggleClass('seat-open', player == null).appendTo(parent);
-				box.append($('<img/>').attr('src', '/player/' + (player ? player : '-') + '/avatar'));
-				box.append($('<div/>').addClass('username').text(player ? player : '<open>'));
+				set_player($(boxes[i]), data['pregame_players'][i]);
 			}
 			return;
 		}
 
-		seats = make_seats();
-		$('.tags .label', seats).hide();
-		$('.tag-turn', seats).text('Turn');
-		if(data['leader']) {
-			seat = seats[data['players'].indexOf(data['leader'])];
-			$('.tag-lead', seat).css('display', 'block');
-		}
-		if(data['turn']) {
-			seat = seats[data['players'].indexOf(data['turn'])];
-			if(data['turn_started']) {
-				(function(anchor, start) {
-					update_clock = function() {
-						anchor.html('Turn<br>' + msToString(Date.now() - start));
-					};
-					update_clock();
-					turn_clock = setInterval(update_clock, 1000);
-				})($('.tag-turn', seat), data['turn_started'] + time_off);
-			}
-			$('.tag-turn', seat).css('display', 'block');
-			// For asthetic reasons, we only leave enough room for two rows of tags above each card, and turn takes both
-			// If the current player is also the leader, we hide that tag (it should be obvious they're leading since it's their turn and nobody has played)
-			$('.tag-lead', seat).hide();
-		}
-		if(data['winning']) {
-			seat = seats[data['players'].indexOf(data['winning'])];
-			$('.tag-winning', seat).css('display', 'block');
-		}
+		$('.seat').show();
+		$('.pregame-players').hide();
 
-		for(i = 0; i < 4; i++) {
-			seat = seats[i];
-			if(data['players'][i] == null) {
-				seat.addClass('seat-open');
-				$('.avatar', seat).attr('src', '/player/-/avatar');
-				$('.username', seat).text('Open');
-			} else {
-				username = data['players'][i];
-				seat.removeClass('seat-open');
-				$('.avatar', seat).attr('src', '/player/' + username + '/avatar');
-				$('.username', seat).text(username);
-			}
+		$('.current-trick .seat').each(function(i, seat) {
+			seat = $(this);
+			player = data['players'][i];
+			set_player(seat, player);
+			set_player($($('table.past-tricks tr th')[i + 1]), player);
+
+			$('.tag-lead', seat).toggle(data['leader'] == player);
+			$('.tag-turn', seat).toggle(data['turn'] == player);
+			$('.tag-winning', seat).toggle(data['winning'] == player);
+
 			if(data['bids']) {
 				tricks = $('.tricks', seat);
 				tricks.empty();
 				bid = data['bids'][i];
 				taken = data['taken'][i];
-				// For a player with an unknown bid, we count all taken tricks as non-bags and show no out tricks
-				if(bid == null) {
-					tricks.attr('title', 'Took ' + taken + ' ' + (taken == 1 ? 'trick' : 'tricks') + ' (unknown bid)');
-					for(j = 0; j < taken; j++) {
-						tricks.append($('<img/>').attr('src', '/card/back').addClass('taken'));
-					}
+				if(bid == 'nil' || bid == 'blind') {
+					tricks.attr('title', (bid == 'blind' ? 'Blind ' : '') + 'Nil' + (taken ? (' (' + taken + (taken == 1 ? 'bag' : 'bags') + ')') : ''));
+					bid = 0;
 				} else {
-					tricks.attr('title', 'Took ' + taken + '/' + bid + ' ' + (taken == 1 ? 'trick' : 'tricks') + (taken <= bid ? '' : (' (' + (taken - bid) + ' ' + (taken - bid == 1 ? 'bag' : 'bags') + ')')));
-					for(j = 0; j < Math.min(bid, taken); j++) {
-						tricks.append($('<img/>').attr('src', '/card/back').addClass('taken'));
-					}
-					for(j = bid; j < taken; j++) {
-						tricks.append($('<img/>').attr('src', '/card/back').addClass('bag'));
-					}
-					for(j = taken; j < bid; j++) {
-						tricks.append($('<img/>').attr('src', '/card/blank').addClass('out'));
-					}
+					tricks.attr('title', 'Took ' + taken + '/' + bid + ' ' + 'tricks' + (taken <= bid ? '' : (' (' + (taken - bid) + ' ' + (taken - bid == 1 ? 'bag' : 'bags') + ')')));
+				}
+				for(j = 0; j < Math.min(bid, taken); j++) {
+					tricks.append($('<img/>').attr('src', '/card/back').addClass('taken'));
+				}
+				for(j = bid; j < taken; j++) {
+					tricks.append($('<img/>').attr('src', '/card/back').addClass('bag'));
+				}
+				for(j = taken; j < bid; j++) {
+					tricks.append($('<img/>').attr('src', '/card/blank').addClass('out'));
 				}
 			}
+
 			if(data['plays']) {
-				$('.card', seat).attr('title', data['plays'][i] || '').attr('src', '/card/' + (data['plays'][i] ? data['plays'][i] : 'back'));
+				set_card($('img.card', seat), data['plays'][i] || 'back');
 			}
+		});
+
+		// Update the turn clock every second.
+		// There will only ever be one visible turn tag
+		if(turn_clock) {
+			clearInterval(turn_clock);
+		}
+		$('.tag-turn:visible').each(function() {
+			anchor = $(this);
+			start = data['turn_started'] + time_off;
+			turn_clock = null;
+			update_clock = function() {
+				anchor.html('Turn<br>' + msToString(Date.now() - start));
+			};
+			turn_clock = setInterval(update_clock, 1000);
+			update_clock();
+		});
+
+		// For asthetic reasons, we only leave enough room for two rows of tags above each card, and turn takes both.
+		// If the current player is also the leader, we hide that tag (it should be obvious they're leading since it's their turn and nobody has played)
+		if(data['leader'] == data['turn']) {
+			$('.tag-lead').hide();
 		}
 
-		// Replace old seats DOM with the new one
-		$.each(seats, function(_, seat) {
-			$('.seat-' + seat.data('location')).replaceWith(seat);
+		/** Past Tricks **/
+
+		if(data['past_tricks']) {
+			$.each($('table.past-tricks tr:not(:first-child)').get().reverse(), function(j, row) {
+				row = $(row);
+				if(data['past_tricks'][j]) {
+					trick = data['past_tricks'][j];
+					$('td.trick-number .label', row).html('Trick ' + (j + 1) + '&nbsp;&nbsp;(' + msToString(trick['duration']) + ')');
+					$('td.trick', row).each(function(k, handle) {
+						set_card($('img', handle), trick['plays'][k]);
+						$('.tag-lead', handle).toggle(trick['leader'] == data['players'][k]);
+						$('.tag-winning', handle).toggle(trick['winner'] == data['players'][k]);
+					});
+					row.show();
+				} else {
+					row.hide();
+				}
+			});
+		} else {
+			$('table.past-tricks tr:not(:first-child)').hide();
+		}
+
+		/** Remaining cards **/
+
+		$('.remaining-cards img').hide();
+		$.each(data['deck'] || [], function(j, card) {
+			$('.remaining-cards img[src$=' + card + ']').show();
 		});
+
+		return;
 
 		parent = $('<table/>').addClass('past-tricks');
 		if(data['players'][3]) { // All players known
