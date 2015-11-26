@@ -136,9 +136,7 @@ $(document).ready(function() {
 				}
 			}
 
-			if(data['plays']) {
-				set_card($('img.card', seat), data['plays'][i] || 'back');
-			}
+			set_card($('img.card', seat), (data['plays'] && data['plays'][i]) ? data['plays'][i] : 'back');
 		});
 
 		// Update the turn clock every second.
