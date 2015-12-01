@@ -86,6 +86,14 @@ $(document).ready(function() {
 		$('title').text(data['description'].join(' ') + ' - ' + data['friendly_name'] + ' - Spades');
 		$('h1').text(data['friendly_name']);
 		$('.navbar .navbar-brand').html(data['description'].join('&nbsp;&bull;&nbsp;'));
+		if(data['err']) {
+			$('#game-error').text(data['err']).show();
+		} else {
+			$('#game-error').hide();
+		}
+		if(data['turn']) {
+			$('title').text(data['turn'] + "'s turn - " + $('title').text());
+		}
 
 		$('.cols').show();
 

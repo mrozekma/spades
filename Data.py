@@ -92,6 +92,8 @@ class Game:
 			'friendly_name': self.friendlyName,
 			'players': self.players,
 		}
+		if hasattr(self, 'gameCon') and hasattr(self.gameCon, 'err'): # This only happens if this is the current game and the EventThread has crashed
+			rtn['err'] = self.gameCon.err
 		if self.finished: # The only time this propery should be accessed by finished games is if they were already open in a client; otherwise the client should have been redirected on page load
 			rtn['description'] = ['Game over']
 		elif self.currentRound is None:

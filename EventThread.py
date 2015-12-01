@@ -85,10 +85,14 @@ class EventThread(Thread):
 		while True:
 			try:
 				self.tick()
-				DB.setActiveGame(getattr(self.gameCon, 'game', None))
-			except Exception:
-				print "EventThread error"
+			except Exception, e:
+				print "EventThread error:"
+				if self.gameCon is not None:
+					self.gameCon.err = str(e)
 				traceback.print_exc()
+				break
+			finally:
+				DB.setActiveGame(getattr(self.gameCon, 'game', None))
 			time.sleep(period)
 
 	def tick(self):
@@ -166,12 +170,9 @@ class EventThread(Thread):
 			else:
 				line = data[self.gameCon.logOffset:]
 				line = line[:line.index('\n')]
-				raise RuntimeError("EventThread: Unrecognized log line: %s" % line)
+				raise RuntimeError("Unrecognized log line: %s" % line)
 		if hasattr(self.gameCon, 'game'):
 			self.gameCon.game.out()
-			print "Current score: %s" % self.gameCon.game.score
-			if hasattr(self.gameCon, 'currentRound'):
-				print "Left: %s" % self.gameCon.currentRound.cardsLeft
 			WSSpadesHandler.on_game_change(self.gameCon.game)
 
 	def cachedGet(self, url, etags = {}):

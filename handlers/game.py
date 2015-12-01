@@ -26,6 +26,7 @@ def game(handler, name):
 	handler.title(game.friendlyName)
 	nav.out('current round', name = name)
 
+	print ErrorBox(title = '', text = '', id = 'game-error')
 	print "<div class=\"cols\">"
 	print   "<div class=\"disconnected-icon glyphicon glyphicon-transfer\" title=\"Disconnected from server\"></div>"
 	print   "<div class=\"current-trick col\">"
