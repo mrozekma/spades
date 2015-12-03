@@ -109,13 +109,15 @@
 		}
 
 		&.seat-north {
-			left: ~"calc((500px - 200px) / 2)";
 			transform: rotate(180deg);
+			top: 0px;
+			left: ~"calc((500px - 200px) / 2)";
 		}
 
 		&.seat-west {
 			transform: rotate(90deg);
 			top: ~"calc((500px - 200px) / 2)";
+			left: 0px;
 		}
 
 		&.seat-east {
@@ -125,8 +127,8 @@
 		}
 
 		&.seat-south {
-			left: ~"calc((500px - 200px) / 2)";
 			bottom: 0px;
+			left: ~"calc((500px - 200px) / 2)";
 		}
 	}
 }

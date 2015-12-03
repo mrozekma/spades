@@ -48,7 +48,7 @@ def game(handler, name):
 		print   "<div class=\"bottom\">"
 		print     "<img class=\"avatar\" src=\"/player/-/avatar\"></img>"
 		print     "<div class=\"right\">"
-		print       "<div class=\"username\">%lt;open%gt;</div>"
+		print       "<div class=\"username\">&lt;open&gt;</div>"
 		print       "<div class=\"tricks\">"
 		# print       "<img class=\"out\" src=\"/card/nil\">"
 		# print       "<img class=\"out\" src=\"/card/blind\">"

@@ -42,6 +42,7 @@ msToString = function(ts) {
 }
 
 set_player = function(handle, player) {
+	handle.data('player', player);
 	handle.toggleClass('seat-open', player == null);
 	url = '/player/' + (player ? player : '-') + '/avatar';
 	username = player ? player : '<open>';
@@ -60,6 +61,12 @@ set_card = function(handle, card) {
 	}
 }
 
+notify = function(text) {
+    if(Notification.permission == 'granted') {
+        new Notification('Spades', {body: text});
+    }
+}
+
 $(document).ready(function() {
 	turn_clock = null;
 
@@ -68,6 +75,77 @@ $(document).ready(function() {
 		this.remove();
 	});
 
+	barn = new Barn(localStorage);
+
+	setup_focus = function() {
+		player = barn.get('focus');
+		seats = $('.seat');
+		order = ['south', 'west', 'north', 'east'];
+		if(player) {
+			seats.each(function(i, seat) {
+				if($(seat).data('player') == player) {
+					return false; // stop iterating
+				}
+				order.unshift(order.pop()); // rotate right
+			});
+		}
+		// If any of the seats are wrong, fix them all
+		// (NB: the arguments to the callback to every() are reversed from jQuery's each())
+		if(!seats.get().every(function(seat, i) {return $(seat).hasClass('seat-' + order[i]);})) {
+			seats.removeClass('seat-south seat-west seat-north seat-east');
+			seats.each(function(i, seat) {
+				$(seat).addClass('seat-' + order[i]);
+			});
+		}
+	}
+
+	$.contextMenu({
+		selector: ".avatar,.username",
+		build: function($trigger, e) {
+			// Find the DOM parent that contains the player as attached data (set by set_player())
+			player = $trigger.parents(':data(player)').data('player');
+			items = {}
+			if(barn.get('focus') != player) {
+				items.focus = {
+					name: "Force south",
+					callback: function(key, opt) {
+						barn.set('focus', player);
+						setup_focus();
+					}
+				};
+			} else {
+				items.unfocus = {
+					name: "Stop forcing south",
+					callback: function(key, opt) {
+						barn.del('focus');
+						setup_focus();
+					}
+				};
+			}
+			if((barn.smembers('alerts') || []).indexOf(player) < 0) {
+				items.alert = {
+					name: "Show turn alerts",
+					callback: function(key, opt) {
+						barn.sadd('alerts', player);
+					}
+				};
+			} else {
+				items.unalert = {
+					name: "Stop showing turn alerts",
+					callback: function(key, opt) {
+						barn.srem('alerts', player);
+					}
+				};
+			}
+			return {items: items};
+		},
+	});
+
+	if(Notification.permission == 'default') {
+		Notification.requestPermission();
+	}
+
+	current_turn = null;
 	SpadesWS.on_message(function(e, data) {
 		console.log(data);
 		if(data['description'] == 'Game over') {
@@ -93,6 +171,12 @@ $(document).ready(function() {
 		}
 		if(data['turn']) {
 			$('title').text(data['turn'] + "'s turn - " + $('title').text());
+			if(current_turn != data['turn']) {
+				current_turn = data['turn'];
+				if((barn.smembers('alerts') || []).indexOf(current_turn) >= 0) {
+					notify("It is " + current_turn + "'s turn");
+				}
+			}
 		}
 
 		$('.cols').show();
@@ -149,9 +233,6 @@ $(document).ready(function() {
 
 		// Update the turn clock every second.
 		// There will only ever be one visible turn tag
-		if(turn_clock) {
-			clearInterval(turn_clock);
-		}
 		$('.tag-turn:visible').each(function() {
 			anchor = $(this);
 			start = data['turn_started'] + time_off;
@@ -168,6 +249,8 @@ $(document).ready(function() {
 		if(data['leader'] == data['turn']) {
 			$('.tag-lead').hide();
 		}
+
+		setup_focus();
 
 		/** Past Tricks **/
 

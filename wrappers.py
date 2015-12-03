@@ -18,6 +18,11 @@ def header(handler, includes):
 	print "<script src=\"//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js\"></script>"
 	print "<link rel=\"stylesheet\" href=\"//ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css\" />"
 	print "<script src=\"//ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js\"></script>"
+	print "<script src=\"/static/third-party/jquery.ui.position.js\"></script>"
+	print "<script src=\"/static/third-party/jquery.contextMenu.js\"></script>"
+	print "<link rel=\"stylesheet\" href=\"/static/third-party/jquery.contextMenu.css\" />"
+
+	print "<script src=\"/static/third-party/barn.js\"></script>"
 
 	# Bootstrap
 	print "<link rel=\"stylesheet\" href=\"//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css\" integrity=\"sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==\" crossorigin=\"anonymous\">"
@@ -68,9 +73,7 @@ def header(handler, includes):
 
 	print "<div class=\"topbar\">"
 	print "<h1>%s</h1>" % bleach.clean(bodyTitle)
-	print "<div class=\"links\">"
-	print "<a href=\"/\">Games</a>"
-	print "</div>"
+	print "<div class=\"links\"><a href=\"/\">Games</a> | <a href=\"/settings\">Settings</a></div>"
 	print "</div>"
 
 def footer(handler):
