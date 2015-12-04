@@ -202,9 +202,9 @@ $(document).ready(function() {
 			set_player(seat, player);
 			set_player($($('table.past-tricks tr th')[i + 1]), player);
 
-			$('.tag-lead', seat).toggle(data['leader'] == player);
-			$('.tag-turn', seat).toggle(data['turn'] == player);
-			$('.tag-winning', seat).toggle(data['winning'] == player);
+			$('.tag-lead', seat).toggle(player && data['leader'] == player);
+			$('.tag-turn', seat).toggle(player && data['turn'] == player);
+			$('.tag-winning', seat).toggle(player && data['winning'] == player);
 
 			if(data['bids']) {
 				tricks = $('.tricks', seat);
