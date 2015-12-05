@@ -80,6 +80,7 @@ class EventThread(Thread):
 		self.name = 'event thread'
 		self.daemon = True
 		self.gameCon = None
+		self.tickWait = True
 
 	def run(self):
 		while True:
@@ -93,7 +94,10 @@ class EventThread(Thread):
 				break
 			finally:
 				DB.setActiveGame(getattr(self.gameCon, 'game', None))
-			time.sleep(period)
+			if self.tickWait:
+				time.sleep(period)
+			else:
+				self.tickWait = True
 
 	def tick(self):
 		if self.gameCon is None:
@@ -193,4 +197,5 @@ class EventThread(Thread):
 		game.out()
 		db['games'][self.gameCon.logFilename] = game
 		self.gameCon = None
-		self.tick()
+		# After this tick, immediately check again for a new game. This is mostly used when populating the database for the first time
+		self.tickWait = False
