@@ -13,11 +13,16 @@ from utils import *
 
 handlers = []
 channels = {}
+uaPort = None
 
 class WebSocket:
 	@staticmethod
-	def start(port):
-		WSThread(port).start()
+	def start(thisPort, thisUAPort):
+		global uaPort
+		if uaPort is not None:
+			raise RuntimeError("WebSocket started multiple times")
+		uaPort = thisUAPort
+		WSThread(thisPort).start()
 
 	@staticmethod
 	def broadcast(data):
@@ -28,6 +33,12 @@ class WebSocket:
 	def sendChannel(channel, data):
 		for handler in channels.get(channel, []):
 			handler.sendChannel(channel, data)
+
+	@staticmethod
+	def getUAPort():
+		if uaPort is None:
+			raise RuntimeError("WebSocket not yet started")
+		return uaPort
 
 class WSThread(Thread):
 	def __init__(self, port):

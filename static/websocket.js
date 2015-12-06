@@ -1,7 +1,7 @@
 SpadesWS = (function() {
 	event_anchor = {};
 	socket = null;
-	port = 8084;
+	port = get_websocket_port(); // /dyn.js (dyn.py handler)
 
 	function init() {
 		socket = new WebSocket('ws://' + window.location.hostname + ':' + port + '/ws');

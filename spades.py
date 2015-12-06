@@ -1,4 +1,5 @@
 from datetime import datetime
+from argparse import ArgumentParser
 import os
 import re
 import sys
@@ -16,12 +17,17 @@ from rorn.HTTPServer import HTTPServer
 from rorn.Box import classnames as boxClasses
 boxClasses.update({'base': 'alert', 'info': 'alert-info', 'success': 'alert-success', 'warning': 'alert-warning', 'error': 'alert-danger'})
 
-PORT = 8083
+parser = ArgumentParser()
+parser.add_argument('--http-port', type = int, default = 8083, help = 'HTTP port')
+parser.add_argument('--ws-port', type = int, default = 8084, help = 'Websocket port')
+parser.add_argument('--ws-ua-port', type = int, help = 'Websocket port user agents should connect to')
+args = parser.parse_args()
+
 currentThread().name = 'main'
 EventThread().start()
-WebSocket.start(PORT + 1)
+WebSocket.start(args.ws_port, args.ws_ua_port or args.ws_port)
 
-server = HTTPServer(('', PORT), HTTPHandler)
+server = HTTPServer(('', args.http_port), HTTPHandler)
 try:
 	console('rorn', 'Listening for connections')
 	server.serve_forever()
