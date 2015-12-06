@@ -1,4 +1,4 @@
-game_name = location.href.split('/').slice(-1)[0];
+game_name = location.href.match(/\/games\/([0-9]{8}_[0-9]{6})(\/|$)/)[1];
 
 connection_timer = null;
 attempt_connection = function() {
@@ -45,7 +45,7 @@ set_player = function(handle, player) {
 	handle.data('player', player);
 	handle.toggleClass('seat-open', player == null);
 	url = '/player/' + (player ? player : '-') + '/avatar';
-	username = player ? player : '<open>';
+	username = player ? player : '<unknown>';
 	if($('.avatar', handle).attr('src') != url) {
 		$('.avatar', handle).attr('src', url);
 	}
@@ -184,6 +184,7 @@ $(document).ready(function() {
 		// Players aren't seated yet, so don't bother showing all that
 		// Just show a list of players
 		if(data['pregame_players']) {
+			$('.col:not(.current-trick)').hide();
 			$('.seat').hide();
 			$('.pregame-players').show();
 			boxes = $('.pregame-player');
@@ -193,6 +194,7 @@ $(document).ready(function() {
 			return;
 		}
 
+		$('.col').show();
 		$('.seat').show();
 		$('.pregame-players').hide();
 
@@ -202,9 +204,9 @@ $(document).ready(function() {
 			set_player(seat, player);
 			set_player($($('table.past-tricks tr th')[i + 1]), player);
 
-			$('.tag-lead', seat).toggle(player && data['leader'] == player);
-			$('.tag-turn', seat).toggle(player && data['turn'] == player);
-			$('.tag-winning', seat).toggle(player && data['winning'] == player);
+			$('.tag-lead', seat).toggle(player != null && data['leader'] == player);
+			$('.tag-turn', seat).toggle(player != null && data['turn'] == player);
+			$('.tag-winning', seat).toggle(player != null && data['winning'] == player);
 
 			if(data['bids']) {
 				tricks = $('.tricks', seat);
@@ -213,6 +215,7 @@ $(document).ready(function() {
 				taken = data['taken'][i];
 				if(bid == 'nil' || bid == 'blind') {
 					tricks.attr('title', (bid == 'blind' ? 'Blind ' : '') + 'Nil' + (taken ? (' (' + taken + (taken == 1 ? 'bag' : 'bags') + ')') : ''));
+					tricks.append($('<img/>').attr('src', '/card/' + bid));
 					bid = 0;
 				} else {
 					tricks.attr('title', 'Took ' + taken + '/' + bid + ' ' + 'tricks' + (taken <= bid ? '' : (' (' + (taken - bid) + ' ' + (taken - bid == 1 ? 'bag' : 'bags') + ')')));
@@ -231,10 +234,11 @@ $(document).ready(function() {
 			set_card($('img.card', seat), (data['plays'] && data['plays'][i]) ? data['plays'][i] : 'back');
 		});
 
-		// Update the turn clock every second.
-		// There will only ever be one visible turn tag
-		$('.tag-turn:visible').each(function() {
-			anchor = $(this);
+		// It's possible (if unlikely) to have a turn field but no turn_started if we happen to pull from the server at the wrong instant
+		anchor = $($('.tag-turn:visible')[0]);
+		if(data['turn_started']) {
+			// Update the turn clock every second.
+			// There will only ever be one visible turn tag
 			start = data['turn_started'] + time_off;
 			turn_clock = null;
 			update_clock = function() {
@@ -242,7 +246,9 @@ $(document).ready(function() {
 			};
 			turn_clock = setInterval(update_clock, 1000);
 			update_clock();
-		});
+		} else {
+			anchor.text('Turn');
+		}
 
 		// For asthetic reasons, we only leave enough room for two rows of tags above each card, and turn takes both.
 		// If the current player is also the leader, we hide that tag (it should be obvious they're leading since it's their turn and nobody has played)

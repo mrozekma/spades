@@ -102,7 +102,11 @@ class Game:
 			# Instead we set the pregame list, and adjust the friendly name accordingly
 			del rtn['players']
 			rtn['pregame_players'] = self.gameCon.players
-			rtn['friendly_name'] = "%s%s and %d more to %d" % (', '.join(rtn['pregame_players']), ', ' if len(rtn['pregame_players']) > 1 else '', 4 - len(rtn['pregame_players']), self.goal)
+			num = len(rtn['pregame_players'])
+			rtn['friendly_name'] = (("Game to %d" % self.goal) if num == 0 else
+			                        ("%s and 3 more to %d" % (rtn['pregame_players'][0], self.goal)) if num == 1 else
+			                        ("%s, and %d more to %d" % (', '.join(rtn['pregame_players']), 4 - num, self.goal)) if num < 4 else
+			                        ("%s, and %s to %d" % (', '.join(rtn['pregame_players'][:-1]), rtn['pregame_players'][-1], self.goal)))
 		else:
 			rtn['description'] = ["Round %d" % len(self.rounds)]
 			# Round data is in round player order, but the client needs it in game player order

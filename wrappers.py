@@ -11,6 +11,7 @@ def header(handler, includes):
 	print "<!DOCTYPE html>"
 	print "<html>"
 	print "<head>"
+	print "<meta charset=\"utf-8\" />"
 	print "<title>%s</title>" % title
 	print "<link rel=\"shortcut icon\" href=\"/static/images/favicon.ico\">"
 

@@ -34,7 +34,7 @@ eventPatterns = {
 	# "(?P<user>USER) wins with PLAY \\(.*(?P<play>PLAY)\\)": [lambda play, **kw: {'type': 'play', 'play': play}, lambda user, **kw: {'type': 'trick_win', 'who': user}],
 	"USER wins with PLAY \\(.*(?P<play>PLAY)\\)": lambda play: {'type': 'play', 'play': play},
 
-	# We use deal/game_end as a marker instead of determining if the game is over ourselves, and round_summary/nil_signal to figure out the last player's bid
+	# We use deal/game_end as a marker instead of determining if the game is over ourselves, and round_summary/nil_signal to figure out the last player's bid in old logs
 	"/me deals the cards": lambda: {'type': 'deal'},
 	"Game over!": lambda: {'type': 'game_end'},
 	"(?P<user1>USER)/(?P<user2>USER) (?:make their bid|go bust): (?P<taken>NUMBER)/(?P<bid>NUMBER)": lambda user1, user2, taken, bid: {'type': 'round_summary', 'who': (user1, user2), 'taken': int(taken), 'bid': int(bid)},
@@ -81,6 +81,9 @@ class EventThread(Thread):
 		self.daemon = True
 		self.gameCon = None
 		self.tickWait = True
+
+		# For testing. If non-None, represents the number of events that should be read from the current game before stopping
+		self.test = None
 
 	def run(self):
 		while True:
@@ -136,20 +139,7 @@ class EventThread(Thread):
 			return
 		elif len(data) < self.gameCon.logOffset:
 			raise RuntimeError("Fetched %d-byte log file %s, but next event expected at %d" % (len(data), self.gameCon.logFilename, self.gameCon.logOffset))
-		while self.gameCon and self.gameCon.logOffset < len(data):
-			# For testing (20151103_042128):
-			# ONE_JOINED = 0x7d
-			# THREE_JOINED = 0xda
-			# ALL_JOINED = 0x108
-			# FIRST_BIDDER = 0x161
-			# SECOND_BIDDER = 0x19b
-			# THIRD_BIDDER = 0x1e2
-			# LEAD_PLAY = 0x270
-			# SECOND_PLAY = 0x2a3
-			# THIRD_PLAY = 0x2f2
-			# SECOND_TRICK = 0x394
-			# if self.gameCon.logOffset >= SECOND_TRICK: break #NO
-
+		while self.gameCon and self.gameCon.logOffset < len(data) and self.test != 0:
 			line = data[self.gameCon.logOffset:data.index('\n', self.gameCon.logOffset)+1]
 			originalLen = len(line)
 			line = unpretty(line)
@@ -164,11 +154,12 @@ class EventThread(Thread):
 							g['play'] = unpretty(g['play'])
 						tz = int(round((datetime.now() - datetime.utcnow()).total_seconds() / 3600))
 						event = {'ts': datetime.strptime(g['ts'], '%Y-%m-%d %H:%M:%S') + timedelta(hours = tz), 'off': self.gameCon.logOffset}
-						# How can timezones be so much work? Someday this is going to get called right as the hour flips over and it's going to be sad times
 						del g['ts']
 						event.update(fn(**g))
 						#TODO Store events, and use them when restarting the app mid-game
 						# db['events'][event['off']] = event
+						if self.test > 0:
+							self.test -= 1
 						self.gameCon.pump(event)
 					# pump() may have triggered onGameEnd and killed the current gameCon
 					if self.gameCon is not None:
