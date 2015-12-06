@@ -93,6 +93,8 @@ class EventThread(Thread):
 				print "EventThread error:"
 				if self.gameCon is not None:
 					self.gameCon.err = str(e)
+					if hasattr(self.gameCon, 'game'):
+						WSSpadesHandler.on_game_change(self.gameCon.game)
 				traceback.print_exc()
 				break
 			finally:
