@@ -74,7 +74,18 @@ class GameConstructor:
 					self.currentRound.game = self.game
 					self.game.rounds.append(self.currentRound)
 				return
+			if event['type'] == 'nil_signal':
+				# For old logs, this event is necessary to distinguish nil/blind bids from 0 bids for the final bid of the round
+				# In new logs a separate 'bid' event is generated, but this one happens first. The 'bid' event handles this case
+				self.emplace(self.currentRound.players, self.currentPlayer)
+				self.emplace(self.currentRound.bids, event['bid'])
+				del self.currentPlayer, self.thisBidStart
+				if self.currentRound.bids[-1] is not None:
+					self.state = 'playing'
+				return
 			if event['type'] == 'bid':
+				if event['bid'] in ('nil', 'blind'): # Recorded by 'nil_signal'
+					return
 				self.emplace(self.currentRound.players, self.currentPlayer)
 				self.emplace(self.currentRound.bids, event['bid'])
 				del self.currentPlayer, self.thisBidStart
@@ -86,10 +97,6 @@ class GameConstructor:
 				self.emplace(self.currentRound.bids, event['bids'][self.currentPlayer])
 				del self.currentPlayer, self.thisBidStart
 				self.state = 'playing'
-				return
-			if event['type'] == 'nil_signal':
-				# A nil_signal in the bidding state must not be the last player (see nil_signal in the playing state)
-				# We get non-final-player nil bids from bid events, so we can ignore this
 				return
 
 			# In older logs, there was no event for the last bid. If we see a 'playing' event while looking for the last bid, we record the last player and switch to
@@ -104,6 +111,10 @@ class GameConstructor:
 			self.mismatch(event)
 
 		if self.state == 'playing':
+			# For newer logs, if the last player goes nil/blind, the 'nil_signal' event pushes us into the playing state, but then a 'bid' event still follows
+			if event['type'] == 'bid' and event['bid'] in ('nil', 'blind'):
+				return
+
 			if event['type'] == 'playing':
 				self.currentPlayer = event['who']
 				if not hasattr(self, 'currentTrick'):
@@ -125,18 +136,11 @@ class GameConstructor:
 				return
 			if event['type'] == 'round_summary':
 				self.currentRound.end = event['ts']
-				# Using the power of subtraction, we can figure out what the last bid was this round
+				# Using the power of subtraction, we can figure out what the last bid was this round in old logs
 				if self.currentRound.bids[-1] is None and self.currentRound.players[-1] in event['who']:
 					missingPlayer = self.currentRound.players[-1]
 					(partner,) = set(event['who']) - {missingPlayer}
 					self.emplace(self.currentRound.bids, bidValue(event['bid']) - bidValue(self.currentRound.bids[self.currentRound.players.index(partner)]))
-				return
-			if event['type'] == 'nil_signal':
-				# We need this only to distinguish the last bid, since round_summary would just tell us it's zero
-				# If we're getting it in the playing state, it must be the last bid, but we double-check
-				if self.currentRound.bids[-1] is not None:
-					raise RuntimeError("Got non-final nil_signal in playing state")
-				self.emplace(self.currentRound.bids, event['bid'])
 				return
 			if event['type'] == 'game_end':
 				self.game.end = event['ts']
