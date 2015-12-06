@@ -104,6 +104,9 @@ $(document).ready(function() {
 		build: function($trigger, e) {
 			// Find the DOM parent that contains the player as attached data (set by set_player())
 			player = $trigger.parents(':data(player)').data('player');
+			if(!player) {
+				return false;
+			}
 			items = {}
 			if(barn.get('focus') != player) {
 				items.focus = {
