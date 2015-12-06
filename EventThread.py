@@ -131,6 +131,9 @@ class EventThread(Thread):
 		if data is None: # Nothing new
 			print "EventThread: No new data in %s" % self.gameCon.logFilename
 			return
+		elif data is False: # Server is down. Hopefully temporarily; try again next tick
+			print "EventThread: Failed to fetch data from %s" % self.gameCon.logFilename
+			return
 		elif len(data) < self.gameCon.logOffset:
 			raise RuntimeError("Fetched %d-byte log file %s, but next event expected at %d" % (len(data), self.gameCon.logFilename, self.gameCon.logOffset))
 		while self.gameCon and self.gameCon.logOffset < len(data):
@@ -186,6 +189,8 @@ class EventThread(Thread):
 		req = requests.get(url, headers = headers)
 		if req.status_code == 304: # Not Modified
 			return None
+		elif req.status_code == 404:
+			return False
 		elif req.status_code != 200:
 			raise RuntimeError("Server returned %d fetching %s" % (req.status_code, url))
 		if 'etag' in req.headers:
