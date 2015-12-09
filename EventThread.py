@@ -27,7 +27,7 @@ eventPatterns = {
 	"(?P<user>USER): you bid first!": lambda user: {'type': 'bidding', 'who': user},
 	"(?P<user>USER): it is your bid!": lambda user: {'type': 'bidding', 'who': user},
 	"(?P<user>USER): it is your bid! \\(.*:(?P<bid>NUMBER|nil|blind)\\)": [lambda bid, **kw: {'type': 'bid', 'bid': bid if bid in ('nil', 'blind') else int(bid)}, lambda user, **kw: {'type': 'bidding', 'who': user}],
-	"(?:Playing with NUMBER bags?!|No bags!|Fighting for NUMBER tricks!) \\(.*:(?P<bid>NUMBER|nil|blind)\\)": lambda bid: {'type': 'bid', 'bid': bid if bid in ('nil', 'blind') else int(bid)},
+	"(?:Playing with NUMBER bags?!|No bags!|Fighting for NUMBER tricks?!) \\(.*:(?P<bid>NUMBER|nil|blind)\\)": lambda bid: {'type': 'bid', 'bid': bid if bid in ('nil', 'blind') else int(bid)},
 	"(?P<user>USER): you have the opening lead!": lambda user: {'type': 'playing', 'who': user},
 	"(?P<user>USER): it is your turn!": lambda user: {'type': 'playing', 'who': user},
 	"(?P<user>USER): it is your turn! \\(.*(?P<play>PLAY)\\)": [lambda play, **kw: {'type': 'play', 'play': play}, lambda user, **kw: {'type': 'playing', 'who': user}],
