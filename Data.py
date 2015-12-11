@@ -185,6 +185,10 @@ class Round:
 		return dict(zip(self.players, self.bids))
 
 	@property
+	def deal(self):
+		return {player: sorted((trick.playsByPlayer[player] for trick in self.tricks), key = ordering.index) for player in self.players}
+
+	@property
 	def tricksByWinner(self):
 		rtn = {player: [] for player in self.players}
 		for trick in self.tricks:
@@ -241,19 +245,20 @@ class Round:
 		taken = {player: len(tricks) for player, tricks in self.tricksByWinner.iteritems()}
 		return {team: max(0, sum(taken[player] for player in team) - sum(bidValue(bids[player]) for player in team)) for team in self.game.teams}
 
+	# This is kind of a strange property, but it's needed by several others
+	@property
+	def previousRounds(self):
+		for round in self.game.rounds:
+			if round == self:
+				return
+			yield round
+
 	# Score in the game at the end of this round (or end of the last round, if this round is incomplete)
 	@property
 	def score(self):
-		scores = {team: 0 for team in self.game.teams}
-		bags = {team: 0 for team in self.game.teams}
-		for round in self.game.rounds:
-			for team, score in round.scoreChange.iteritems():
-				scores[team] += score
-			for team, bag in round.bags.iteritems():
-				bags[team] += bag
-			if round == self:
-				break
-		return {team: scores[team] - 10 * self.game.bagLimit * int(bags[team] / self.game.bagLimit) for team in self.game.teams}
+		scores = sumByKey((round.scoreChange for round in self.previousRounds), self.scoreChange)
+		bags = sumByKey((round.bags for round in self.previousRounds), self.bags)
+		return {team: scores.get(team, 0) - 10 * self.game.bagLimit * int(bags.get(team, 0) / self.game.bagLimit) for team in self.game.teams}
 
 	def out(self):
 		print "  Round"

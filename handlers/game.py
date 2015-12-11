@@ -1,5 +1,5 @@
 from Charts import *
-from DB import db, getActiveGame
+from DB import db, getActiveGame, getGames
 from Nav import Nav
 from utils import *
 
@@ -7,10 +7,18 @@ from rorn.Box import ErrorBox
 
 from os.path import splitext
 
-nav = Nav(brand = 'right')
-nav['current round'] = '/games/%(name)s'
-nav['history'] = '/games/%(name)s/history'
-nav['log'] = '//pileus.org/andy/spades/%(name)s.log'
+def nav(where, game):
+	nav = Nav(brand = 'right')
+	nav['current round'] = '/games/%(name)s'
+	nav['history'] = '/games/%(name)s/history'
+	nav['log'] = '//pileus.org/andy/spades/%(name)s.log'
+
+	if where == 'history':
+		nav['history', 'game'] = '#g'
+		for i in range(len(game.rounds)):
+			nav['history', "round %d" % (i + 1)] = "#r%d" % (i + 1)
+
+	nav.out(where, name = game.logFilename[:-4])
 
 @get('games/(?P<name>[0-9]{8}_[0-9]{6})', statics = ['websocket', 'game'])
 def game(handler, name):
@@ -24,7 +32,7 @@ def game(handler, name):
 			ErrorBox.die("Game not found", name)
 
 	handler.title(game.friendlyName)
-	nav.out('current round', name = name)
+	nav('current round', game)
 
 	print ErrorBox(title = '', text = '', id = 'game-error')
 	print "<div class=\"cols\">"
@@ -104,3 +112,44 @@ def gamesActive(handler):
 	if game is None:
 		ErrorBox.die("No currently active Spades game")
 	redirect("/games/%s" % splitext(game.logFilename)[0])
+
+@get('games/(?P<name>[0-9]{8}_[0-9]{6})/history', statics = ['game-history'])
+def gameHistory(handler, name):
+	logFilename = "%s.log" % name
+	game = getGames().get(logFilename, None)
+	if game is None:
+		ErrorBox.die("Game not found", name)
+	teams = game.teams
+
+	handler.title(game.friendlyName)
+	nav('history', game)
+	handler.callFromHeader(Chart.include)
+
+	print "<div class=\"nav-arrows\">"
+	print "<div>"
+	print "<a class=\"prev\" href=\"#\"><img src=\"/static/images/prev.png\"></a>"
+	print "<a class=\"next\" href=\"#\"><img src=\"/static/images/next.png\"></a>"
+	print "</div>"
+	print "</div>"
+
+	print "<div class=\"round-box\" id=\"box-g\">"
+	print "<h2>Score</h2>"
+	ScoreChart('score-chart', game).emplace(handler)
+	print "</div>"
+
+	for i, round in enumerate(game.rounds):
+		print "<div class=\"round-box\" id=\"box-r%d\">" % (i + 1)
+		print "<h2>Deal</h2>"
+		print "<div class=\"deal\">"
+		for player, cards in round.deal.iteritems():
+			print "<div class=\"player\">"
+			print "<img src=\"/player/%s/avatar\">" % player
+			print "<div class=\"username\">%s</div>" % player
+			print "</div>"
+			print "<div class=\"cards\">"
+			for card in cards:
+				print "<img src=\"/card/%s\">" % card
+			print "</div>"
+		print "</div>"
+		HandsHeatmap("r%d-hands-heatmap" % (i + 1), round).emplace(handler)
+		print "</div>"

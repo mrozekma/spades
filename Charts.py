@@ -1,4 +1,4 @@
-from Chart import Chart
+from Chart import Chart, raw
 
 from math import ceil
 
@@ -12,7 +12,7 @@ class ScoreChart(Chart):
 		scores = [{team: 0 for team in teams}] + [round.score for round in game.rounds if round.finished]
 
 		self.chart.type = 'line'
-		self.title.text = 'Score'
+		self.title.text = ''
 		self.tooltip.shared = True
 		self.plotOptions.line.dataLabels.enabled = True
 		self.xAxis.categories = [''] + ["Round %d" % (i + 1) for i in range(len(game.rounds))]
@@ -33,3 +33,27 @@ class ScoreChart(Chart):
 		self.series = [{'name': '/'.join(team), 'data': [score[team] for score in scores]} for team in teams]
 		self.series[0]['color'] = '#a00';
 		self.series[1]['color'] = '#00a';
+
+class HandsHeatmap(Chart):
+	def __init__(self, placeholder, round):
+		Chart.__init__(self, placeholder)
+
+		self.chart.type = 'heatmap'
+		self.title.text = ''
+		self.legend.enabled = False
+		self.xAxis.categories = round.players
+		self.yAxis.categories = ['Spades', 'Diamonds', 'Clubs', 'Hearts']
+		self.yAxis.title = ''
+		with self.colorAxis as axis:
+			axis.min = 0
+			axis.max = 13. / 2 # I don't know why, but halving the max makes the axis come out right
+			# We assume most people will have <= 5 cards in a suit, so we bunch the gradient around the lower numbers. #ff3f3f is 75% of the way to #ff0000 (HSV 0/.75/1)
+			axis.stops = [[0, '#ffffff'], [5./13, '#ff3f3f'], [1, '#ff0000']]
+
+		# player: ['As', '10c', ...]
+		deal = round.deal
+		data = [[xI, yI, sum(card[-1] == y[0].lower() for card in deal[x])] for xI, x in enumerate(self.xAxis.categories.get()) for yI, y in enumerate(self.yAxis.categories.get())]
+		self.series = [{'data': data}]
+
+	def placeholder(self):
+		print "<div id=\"%s\" class=\"highchart hands-heatmap\"></div>" % self._id

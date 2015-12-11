@@ -1,4 +1,5 @@
 from json import dumps as toJS, loads as fromJS
+from json.encoder import JSONEncoder
 import re
 
 class Index(object):
@@ -55,6 +56,21 @@ class Index(object):
 			m[self._name] = {}
 		return m[self._name]
 
+class raw(object):
+	wrapper = 'RAW\x01\x02%s\x02\x01'
+
+	def __init__(self, data):
+		self.data = data
+
+	def wrapped(self):
+		return raw.wrapper % self.data
+
+class CustomEncoder(JSONEncoder):
+	# This is hacky as hell because the JSONEncoder interface is terrible and trying to specify your own encoding for a type is nigh-impossible
+	# Instead we give a replacement string for raw objects, let JSONEncoder encode it as a string, and then replace it in Chart.js
+	def default(self, o):
+		return o.wrapped() if isinstance(o, raw) else super(CustomEncoder, self).default(o)
+
 class Chart(object):
 	def __init__(self, placeholder):
 		self._m = {}
@@ -94,12 +110,19 @@ class Chart(object):
 		# print "<script type=\"text/javascript\" src=\"/static/third-party/highcharts/js/highcharts.js\"></script>"
 		print "<script type=\"text/javascript\" src=\"/static/third-party/highcharts/highstock/js/highstock.js\"></script>"
 		print "<script type=\"text/javascript\" src=\"/static/third-party/highcharts/js/highcharts-more.js\"></script>"
+		print "<script type=\"text/javascript\" src=\"/static/third-party/highcharts/js/modules/heatmap.js\"></script>"
 
 	def js(self):
 		print "$(%s).highcharts(" % toJS('#' + self._id),
-		# print "new Highcharts.Chart(",
-		print re.sub('"(?:\\\\n)*function\(\) {(.*)}(?:\\\\n)*"', lambda match: fromJS(match.group(0)), toJS(self._m, sort_keys = True, indent = 4)),
-		print ");",
+		js = toJS(self._m, sort_keys = True, indent = 4, cls = CustomEncoder)
+		# Unwrap raw data. See the comment above in CustomEncoder for the reason for this insanity
+		js = re.sub(re.escape(toJS(raw.wrapper)).replace("\\%s", "(.*)"), lambda match: fromJS('"%s"' % match.group(1)), js)
+		print js
+		print ");"
 
 	def placeholder(self):
-		print "<div id=\"%s\"></div>" % self._id
+		print "<div id=\"%s\" class=\"highchart\"></div>" % self._id
+
+	def emplace(self, handler):
+		handler.jsOnLoad(self.js)
+		self.placeholder()
