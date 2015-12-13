@@ -43,7 +43,6 @@ class GameConstructor:
 			self.state = 'idle'
 			self.game.end = event['ts']
 			if hasattr(self, 'players'):
-				self.game.players += self.players
 				del self.players
 			self.commitGame()
 			return

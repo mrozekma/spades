@@ -9,7 +9,8 @@ from os.path import splitext
 
 def nav(where, game):
 	nav = Nav(brand = 'right')
-	nav['current round'] = '/games/%(name)s'
+	if not game.finished:
+		nav['current round'] = '/games/%(name)s'
 	nav['history'] = '/games/%(name)s/history'
 	nav['log'] = '//pileus.org/andy/spades/%(name)s.log'
 
@@ -131,6 +132,13 @@ def gameHistory(handler, name):
 	print "<a class=\"next\" href=\"#\"><img src=\"/static/images/next.png\"></a>"
 	print "</div>"
 	print "</div>"
+
+	# If we haven't even filled the seats yet, bail out pretty early
+	if None in game.players:
+		if game.finished:
+			ErrorBox.die("Game aborted before first round")
+		else:
+			ErrorBox.die("Waiting for first round to begin")
 
 	print "<div class=\"round-box\" id=\"box-g\">"
 	print "<h2>Score</h2>"
