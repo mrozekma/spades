@@ -186,7 +186,7 @@ class Round:
 
 	@property
 	def deal(self):
-		return {player: sorted((trick.playsByPlayer[player] for trick in self.tricks), key = ordering.index) for player in self.players}
+		return {player: sorted(filter(None, (trick.playsByPlayer[player] for trick in self.tricks if trick is not None)), key = ordering.index) for player in self.players}
 
 	@property
 	def tricksByWinner(self):
