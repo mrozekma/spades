@@ -1,4 +1,5 @@
 from Charts import *
+from Data import bidValue
 from DB import db, getActiveGame, getGames
 from Nav import Nav
 from utils import *
@@ -117,6 +118,42 @@ def gamesActive(handler):
 		ErrorBox.die("No currently active Spades game")
 	redirect("/games/%s" % splitext(game.logFilename)[0])
 
+def printResults(round, team):
+	game = round.game
+	bid = sum(bidValue(round.bidsByPlayer[player]) for player in team)
+	taken = sum(len(round.tricksByWinner[player]) for player in team)
+	if taken >= bid:
+		change = 10 * bid
+		print "<li>%s bid %d, made it with %d (+%d)" % ('/'.join(team), bid, taken, 10 * bid)
+		print "<ul>"
+		if taken > bid:
+			change += taken - bid
+			prevBags = sum(r.bags[team] for r in round.previousRounds) % game.bagLimit
+			print "<li>Took %s, up to %d (+%d)</li>" % (pluralize(taken - bid, 'bag', 'bags'), prevBags + taken - bid, taken - bid)
+			if prevBags + taken - bid >= game.bagLimit:
+				change -= 10 * game.bagLimit
+				print "<li>Bagged out (-%d)</li>" % (10 * game.bagLimit)
+	else:
+		change = -10 * bid
+		print "<li>%s bid %d, set with %d (-%d)" % ('/'.join(team), bid, taken, 10 * bid)
+		print "<ul>"
+	for player in team:
+		bid = round.bidsByPlayer[player]
+		if bid in ('nil', 'blind'):
+			playerTaken = len(round.tricksByWinner[player])
+			desc = 'blind nil' if bid == 'blind' else 'nil'
+			thisChange = 10 * game.bagLimit * (2 if bid == 'blind' else 1) * (1 if playerTaken == 0 else -1)
+			if playerTaken == 0:
+				print "<li>%s made %s (%d)</li>" % (player, desc, thisChange)
+			else:
+				print "<li>%s took %d, failed %s (%d)" % (player, playerTaken, desc, thisChange)
+			change += thisChange
+	if change == 0:
+		print "<li>No score change, still at %d points</li>" % round.score[team]
+	else:
+		print "<li>%s %s, %s to %d</li>" % (('Gained' if change > 0 else 'Lost'), pluralize(abs(change), 'point', 'points'), ('up' if change > 0 else 'down'), round.score[team])
+	print "</ul></li>"
+
 @get('games/(?P<name>[0-9]{8}_[0-9]{6})/history', statics = ['game-history'])
 def gameHistory(handler, name):
 	logFilename = "%s.log" % name
@@ -152,6 +189,27 @@ def gameHistory(handler, name):
 		if not round.finished:
 			continue
 		print "<div class=\"round-box\" id=\"box-r%d\">" % (i + 1)
+
+		print "<h2>Results</h2>"
+		print "<ul>"
+		for team in game.teams:
+			printResults(round, team)
+		scores = round.score
+		if set(scores.values()) == 1:
+			score = scores[game.teams[0]]
+			if score >= game.goal:
+				print "<li>Tied at %d. Sudden death</li>" % score
+			else:
+				print "<li>Tied at %d. %d more to win</li>" % (game.goal - score)
+		else:
+			leader = game.teams[0] if scores[game.teams[0]] > scores[game.teams[1]] else game.teams[1]
+			follower = game.teams[0] if leader == game.teams[1] else game.teams[1]
+			if scores[leader] >= game.goal:
+				print "<li>%s win %s. %s trail by %d</li>" % ('/'.join(leader), ('exactly' if scores[leader] == game.goal else 'by %d' % (scores[leader] - game.goal)), '/'.join(follower), scores[leader] - scores[follower])
+			else:
+				print "<li>%s lead by %d. %d more to win</li>" % ('/'.join(leader), scores[leader] - scores[follower], game.goal - scores[leader])
+		print "</ul>"
+
 		print "<h2>Deal</h2>"
 		print "<div class=\"deal\">"
 		deal = round.deal
@@ -170,6 +228,7 @@ def gameHistory(handler, name):
 			print "</div>"
 		print "</div>"
 		HandsHeatmap("r%d-hands-heatmap" % (i + 1), round).emplace(handler)
+
 		print "</div>"
 
 @get('games/history.less')
