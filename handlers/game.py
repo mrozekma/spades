@@ -16,7 +16,10 @@ def nav(where, game):
 
 	if where == 'history':
 		nav['history', 'game'] = '#g'
-		for i in range(len(game.rounds)):
+		numRounds = len(game.rounds)
+		if numRounds > 0 and not game.rounds[-1].finished:
+			numRounds -= 1
+		for i in range(numRounds):
 			nav['history', "round %d" % (i + 1)] = "#r%d" % (i + 1)
 
 	nav.out(where, name = game.logFilename[:-4])
@@ -146,16 +149,19 @@ def gameHistory(handler, name):
 	print "</div>"
 
 	for i, round in enumerate(game.rounds):
+		if not round.finished:
+			continue
 		print "<div class=\"round-box\" id=\"box-r%d\">" % (i + 1)
 		print "<h2>Deal</h2>"
 		print "<div class=\"deal\">"
-		for player, cards in round.deal.iteritems():
+		deal = round.deal
+		for player in game.players:
 			print "<div class=\"player\">"
 			print "<img src=\"/player/%s/avatar\">" % player
 			print "<div class=\"username\">%s</div>" % player
 			print "</div>"
 			print "<div class=\"cards\">"
-			for card in cards:
+			for card in deal[player]:
 				print "<img src=\"/card/%s\">" % card
 			print "</div>"
 		print "</div>"

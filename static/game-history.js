@@ -1,9 +1,16 @@
 $(document).ready(function() {
-	max_round = parseInt($('.nav .dropdown-menu li a[href^="#r"]').last().attr('href').substr(2), 10);
+	links = $('.nav .dropdown-menu li a[href^="#r"]');
+	max_round = (links.length > 0) ? parseInt(links.last().attr('href').substr(2), 10) : 0;
 	$(window).bind('hashchange', function(e) {
 		match = window.location.hash.match(/^#r([0-9]+)$/);
 		if(match) {
 			round = parseInt(match[1], 10);
+			if(round < 1) {
+				window.location.hash = '#g';
+				return;
+			} else if(round > max_round) {
+				window.location.hash = max_round ? '#r' + max_round : '#g';
+			}
 			key = 'r' + round;
 			title = 'Round ' + round + ' / ' + max_round;
 			prev = (round == 1) ? 'g' : 'r' + (round - 1);
