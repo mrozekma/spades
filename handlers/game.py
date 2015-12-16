@@ -155,6 +155,7 @@ def gameHistory(handler, name):
 		print "<h2>Deal</h2>"
 		print "<div class=\"deal\">"
 		deal = round.deal
+		winners = [trick.win for trick in round.tricks]
 		for player in game.players:
 			print "<div class=\"player\">"
 			print "<img src=\"/player/%s/avatar\">" % player
@@ -162,8 +163,27 @@ def gameHistory(handler, name):
 			print "</div>"
 			print "<div class=\"cards\">"
 			for card in deal[player]:
-				print "<img src=\"/card/%s\">" % card
+				cls = ['card', "card-%s" % card]
+				if card in winners:
+					cls.append('winner')
+				print "<div class=\"%s\"></div>" % ' '.join(cls)
 			print "</div>"
 		print "</div>"
 		HandsHeatmap("r%d-hands-heatmap" % (i + 1), round).emplace(handler)
 		print "</div>"
+
+@get('games/history.less')
+def historyLess(handler):
+	handler.wrappers = False
+	handler.contentType = 'text/css'
+	from Data import ordering
+	for card in ordering:
+		print """
+.cards .card-%(card)s {
+    background-image: url(/card/%(card)s);
+    &.winner {
+        // https://css-tricks.com/tinted-images-multiple-backgrounds/
+        background-image: linear-gradient(rgba(0, 255, 0, .25), rgba(0, 255, 0, .25)), url(/card/%(card)s);
+    }
+}
+""" % {'card': card}
