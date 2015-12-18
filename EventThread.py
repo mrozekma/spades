@@ -54,6 +54,7 @@ eventPatterns = {
 	"Cards have been passed!": None,
 	"USER (?:makes|fails at|makes blind|fails miserably at blind) nil!": None,
 	"USER (?:\\(USER\\) )?can (?:now|no longer) play for USER": None,
+	"USER allowed:.*": None,
 }
 
 # [(compiled line pattern, [fun(pattern groups) -> event dict])]
