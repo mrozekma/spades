@@ -5,14 +5,19 @@ import re
 import requests
 from threading import Thread
 import time
+from tornado import gen
+from tornado.websocket import websocket_connect
+from tornado.ioloop import IOLoop
 import traceback
 
 import DB
 from DB import db, getGames
 from GameConstructor import GameConstructor
+from Log import console
 from WebSocket import WSSpadesHandler
 
 logURL = 'http://pileus.org/andy/spades/'
+wsURL = 'ws://pileus.org:6180/socket'
 period = 10 # seconds
 prefix = "(?P<ts>[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}) \\| "
 
@@ -76,7 +81,7 @@ def unpretty(str):
 	return str.encode('ascii')
 
 class EventThread(Thread):
-	def __init__(self):
+	def __init__(self, mode):
 		Thread.__init__(self)
 		self.name = 'event thread'
 		self.daemon = True
@@ -86,24 +91,58 @@ class EventThread(Thread):
 		# For testing. If non-None, represents the number of events that should be read from the current game before stopping
 		self.test = None
 
-	def run(self):
+		self.run = {
+			'poll': self.runPolling,
+			'websocket': self.runWebsocket,
+		}[mode]
+
+	def runPolling(self):
 		while True:
-			try:
-				self.tick()
-			except Exception, e:
-				print "EventThread error:"
-				if self.gameCon is not None:
-					self.gameCon.err = str(e)
-					if hasattr(self.gameCon, 'game'):
-						WSSpadesHandler.on_game_change(self.gameCon.game)
-				traceback.print_exc()
-				break
-			finally:
-				DB.setActiveGame(getattr(self.gameCon, 'game', None))
+			if self.tickWrap() is False:
+				return
 			if self.tickWait:
 				time.sleep(period)
 			else:
 				self.tickWait = True
+
+	def runWebsocket(self):
+		@gen.coroutine
+		def wrap():
+			while True:
+				console('websocket client', "Connecting to %s" % wsURL)
+				ws = yield websocket_connect(wsURL)
+				console('websocket client', 'Connected')
+				# Trigger once immediately to fetch the current game
+				while True:
+					self.tickWrap()
+					if self.tickWait:
+						break
+					else:
+						self.tickWait = True
+				while True:
+					# Wait for a message, then poll the logs (we could theoretically just use the message directly, but this is easier to fit into the existing setup that expects offsets and timestamps)
+					msg = yield ws.read_message()
+					if msg is None:
+						break
+					console('websocket client', "Message: %s" % msg)
+					self.tickWrap()
+				console('websocket client', 'Disconnected')
+		wrap()
+
+	def tickWrap(self):
+		try:
+			self.tick()
+			return True
+		except Exception, e:
+			print "EventThread error:"
+			if self.gameCon is not None:
+				self.gameCon.err = str(e)
+				if hasattr(self.gameCon, 'game'):
+					WSSpadesHandler.on_game_change(self.gameCon.game)
+			traceback.print_exc()
+			return False
+		finally:
+			DB.setActiveGame(getattr(self.gameCon, 'game', None))
 
 	def tick(self):
 		if self.gameCon is None:
@@ -125,20 +164,20 @@ class EventThread(Thread):
 			# Find the first one we don't have a game for
 			for log in logs:
 				if log not in db['games']:
-					print "EventThread: Starting new game for %s" % log
+					console('event thread', "Starting new game for %s" % log)
 					self.gameCon = GameConstructor(log, self.onGameEnd)
 					break
 			else:
-				print "EventThread: No games in progress"
+				console('event thread', "No games in progress")
 				return
 
 		# Look for new events in the current log
 		data = self.cachedGet(logURL + self.gameCon.logFilename)
 		if data is None: # Nothing new
-			print "EventThread: No new data in %s" % self.gameCon.logFilename
+			console('event thread', "No new data in %s" % self.gameCon.logFilename)
 			return
 		elif data is False: # Server is down. Hopefully temporarily; try again next tick
-			print "EventThread: Failed to fetch data from %s" % self.gameCon.logFilename
+			console('event thread', "Failed to fetch data from %s" % self.gameCon.logFilename)
 			return
 		elif len(data) < self.gameCon.logOffset:
 			raise RuntimeError("Fetched %d-byte log file %s, but next event expected at %d" % (len(data), self.gameCon.logFilename, self.gameCon.logOffset))
@@ -192,7 +231,7 @@ class EventThread(Thread):
 		return req.text
 
 	def onGameEnd(self, game):
-		print "EventThread: Game over: %s" % self.gameCon.logFilename
+		console('event thread', "Game over: %s" % self.gameCon.logFilename)
 		game.out()
 		db['games'][self.gameCon.logFilename] = game
 		self.gameCon = None
