@@ -38,6 +38,8 @@ eventPatterns = {
 	"(?P<user>USER): it is your turn! \\(.*(?P<play>PLAY)\\)": [lambda play, **kw: {'type': 'play', 'play': play}, lambda user, **kw: {'type': 'playing', 'who': user}],
 	# "(?P<user>USER) wins with PLAY \\(.*(?P<play>PLAY)\\)": [lambda play, **kw: {'type': 'play', 'play': play}, lambda user, **kw: {'type': 'trick_win', 'who': user}],
 	"USER wins with PLAY \\(.*(?P<play>PLAY)\\)": lambda play: {'type': 'play', 'play': play},
+	"(?P<user1>USER)/(?P<user2>USER) are now known as (?P<teamname>.*)": lambda user1, user2, teamname: {'type': 'teamname', 'who': (user1, user2), 'name': teamname},
+	"(?P<user1>USER)/(?P<user2>USER) are boring": lambda user1, user2: {'type': 'teamname', 'who': (user1, user2), 'name': None},
 
 	# We use deal/game_end as a marker instead of determining if the game is over ourselves, and round_summary/nil_signal to figure out the last player's bid in old logs
 	"/me deals the cards": lambda: {'type': 'deal'},
@@ -46,8 +48,10 @@ eventPatterns = {
 	"(?P<user>USER) goes nil!": lambda user: {'type': 'nil_signal', 'who': user, 'bid': 'nil'},
 	"(?P<user>USER) goes blind nil!": lambda user: {'type': 'nil_signal', 'who': user, 'bid': 'blind'},
 
-	# Old form of the final bid message
+	# Old/buggy message forms
 	"(?P<user1>USER)/(?P<user2>USER) bid (?P<bid1>NUMBER|nil|blind)/(?P<bid2>NUMBER|nil|blind), (?P<user3>USER)/(?P<user4>USER) bid (?P<bid3>NUMBER|nil|blind)/(?P<bid4>NUMBER|nil|blind), (?P<bags>NUMBER) bags remain": lambda user1, user2, user3, user4, bid1, bid2, bid3, bid4, bags: {'type': 'bid_recap', 'bids': {user1: bid1 if bid1 in ('nil', 'blind') else int(bid1), user2: bid2 if bid2 in ('nil', 'blind') else int(bid2), user3: bid3 if bid3 in ('nil', 'blind') else int(bid3), user4: bid4 if bid4 in ('nil', 'blind') else int(bid4)}},
+	"(.*) and (.*) are now known as .+": None, # .* because in one buggy case in 20160116_035923.log the player names were empty
+	"(?P<user1>USER)/(?P<user2>USER) are now boring": lambda user1, user2: {'type': 'teamname', 'who': (user1, user2), 'name': None},
 
 	# These are unnecessary messages and generate no events
 	"Round over!": None,

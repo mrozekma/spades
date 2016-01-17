@@ -27,6 +27,11 @@ class GameConstructor:
 		print event
 		if event['off'] < self.logOffset:
 			raise RuntimeError("Received event at offset %d, but already at offset %d" % (event['off'], self.logOffset))
+
+		if event['type'] == 'teamname':
+			self.game.teamNames[event['who']] = event['name'] if event['name'] is not None else '/'.join(event['who'])
+			return
+
 		if self.state == 'idle':
 			if event['type'] == 'game_start':
 				self.state = 'sitting'
@@ -68,6 +73,9 @@ class GameConstructor:
 					self.emplace(self.game.players, event['who'])
 					if self.filled(self.game.players):
 						del self.players
+						for team in self.game.teams:
+							if team not in self.game.teamNames:
+								self.game.teamNames[team] = '/'.join(team)
 				if not hasattr(self, 'currentRound'):
 					self.currentRound = Round(event['ts'])
 					self.currentRound.game = self.game

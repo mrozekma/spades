@@ -23,10 +23,11 @@ class Game:
 		self.bagLimit = bagLimit
 
 		self.players = [None] * 4
+		self.teamNames = {}
 		self.rounds = []
 
 	def __getstate__(self):
-		return {k: getattr(self, k) for k in ('logFilename', 'start', 'end', 'creator', 'goal', 'bagLimit', 'players', 'rounds')}
+		return {k: getattr(self, k) for k in ('logFilename', 'start', 'end', 'creator', 'goal', 'bagLimit', 'players', 'teamNames', 'rounds')}
 
 	def __setstate__(self, v):
 		self.__dict__ = v
@@ -40,7 +41,7 @@ class Game:
 	@property
 	def friendlyName(self):
 		players = [player or '?' for player in self.players]
-		return "%s/%s vs. %s/%s to %d" % (players[0], players[2], players[1], players[3], self.goal)
+		return "%s vs. %s to %d" % (self.teamNames.get((players[0], players[2]), '?'), self.teamNames.get((players[1], players[3]), '?'), self.goal)
 
 	@property
 	def teams(self):

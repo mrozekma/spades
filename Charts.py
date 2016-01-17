@@ -30,7 +30,7 @@ class ScoreChart(Chart):
 		if game.goal <= 1000:
 			self.yAxis.tickInterval = 100
 
-		self.series = [{'name': '/'.join(team), 'data': [score[team] for score in scores]} for team in teams]
+		self.series = [{'name': game.teamNames[team], 'data': [score[team] for score in scores]} for team in teams]
 		self.series[0]['color'] = '#a00';
 		self.series[1]['color'] = '#00a';
 
