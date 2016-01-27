@@ -48,6 +48,10 @@ class Game:
 		return [(self.players[0], self.players[2]), (self.players[1], self.players[3])]
 
 	@property
+	def playersByTeamName(self):
+		return {v: k for k, v in self.teamNames.iteritems()}
+
+	@property
 	def winner(self):
 		scores = [{'team': team, 'score': score} for team, score in self.score.iteritems()]
 		if scores[0]['score'] >= self.goal or scores[1]['score'] >= self.goal:

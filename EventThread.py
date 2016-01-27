@@ -44,7 +44,7 @@ eventPatterns = {
 	# We use deal/game_end as a marker instead of determining if the game is over ourselves, and round_summary/nil_signal to figure out the last player's bid in old logs
 	"/me deals the cards": lambda: {'type': 'deal'},
 	"Game over!": lambda: {'type': 'game_end'},
-	"(?P<user1>USER)/(?P<user2>USER) (?:make their bid|go bust): (?P<taken>NUMBER)/(?P<bid>NUMBER)": lambda user1, user2, taken, bid: {'type': 'round_summary', 'who': (user1, user2), 'taken': int(taken), 'bid': int(bid)},
+	"(?P<team>TEAM) (?:make their bid|go bust): (?P<taken>NUMBER)/(?P<bid>NUMBER)": lambda team, taken, bid: {'type': 'round_summary', 'team': team, 'taken': int(taken), 'bid': int(bid)},
 	"(?P<user>USER) goes nil!": lambda user: {'type': 'nil_signal', 'who': user, 'bid': 'nil'},
 	"(?P<user>USER) goes blind nil!": lambda user: {'type': 'nil_signal', 'who': user, 'bid': 'blind'},
 
@@ -52,12 +52,15 @@ eventPatterns = {
 	"(?P<user1>USER)/(?P<user2>USER) bid (?P<bid1>NUMBER|nil|blind)/(?P<bid2>NUMBER|nil|blind), (?P<user3>USER)/(?P<user4>USER) bid (?P<bid3>NUMBER|nil|blind)/(?P<bid4>NUMBER|nil|blind), (?P<bags>NUMBER) bags remain": lambda user1, user2, user3, user4, bid1, bid2, bid3, bid4, bags: {'type': 'bid_recap', 'bids': {user1: bid1 if bid1 in ('nil', 'blind') else int(bid1), user2: bid2 if bid2 in ('nil', 'blind') else int(bid2), user3: bid3 if bid3 in ('nil', 'blind') else int(bid3), user4: bid4 if bid4 in ('nil', 'blind') else int(bid4)}},
 	"(.*) and (.*) are now known as .+": None, # .* because in one buggy case in 20160116_035923.log the player names were empty
 	"(?P<user1>USER)/(?P<user2>USER) are now boring": lambda user1, user2: {'type': 'teamname', 'who': (user1, user2), 'name': None},
+	# Team names used to have no restrictions:
+	# "(?P<team>.+) (?:make their bid|go bust): (?P<taken>NUMBER)/(?P<bid>NUMBER)": lambda team, taken, bid: {'type': 'round_summary', 'team': team, 'taken': int(taken), 'bid': int(bid)},
+	# ".+ lead NUMBER to NUMBER of NUMBER": None,
 
 	# These are unnecessary messages and generate no events
 	"Round over!": None,
-	"USER/USER lead NUMBER to NUMBER of NUMBER": None,
+	"TEAM lead NUMBER to NUMBER of NUMBER": None,
 	"tied at NUMBER of NUMBER": None,
-	"USER/USER bag (?:way )?out": None,
+	"TEAM bag (?:way )?out": None,
 	"USER/USER: select a card to pass \\(/msg USER \\.pass <card>\\)": None,
 	"USER passes a card": None,
 	"Cards have been passed!": None,
@@ -67,7 +70,7 @@ eventPatterns = {
 }
 
 # [(compiled line pattern, [fun(pattern groups) -> event dict])]
-eventPatterns = [(re.compile(prefix + p.replace('USER', nickPattern).replace('NUMBER', '-?[0-9]+').replace('PLAY', '(?:[23456789JQKA]|10)[sdch]') + '\n$'), [] if fns is None else fns if hasattr(fns, '__iter__') else [fns]) for p, fns in eventPatterns.iteritems()]
+eventPatterns = [(re.compile(prefix + p.replace('USER', nickPattern).replace('TEAM', '[a-zA-Z0-9].*').replace('NUMBER', '-?[0-9]+').replace('PLAY', '(?:[23456789JQKA]|10)[sdch]') + '\n$'), [] if fns is None else fns if hasattr(fns, '__iter__') else [fns]) for p, fns in eventPatterns.iteritems()]
 
 def unpretty(str):
 	str = str.encode('utf-8')
