@@ -203,7 +203,7 @@ def gameHistory(handler, name):
 		for team in game.teams:
 			printResults(round, team)
 		scores = round.score
-		if set(scores.values()) == 1:
+		if len(set(scores.values())) == 1:
 			score = scores[game.teams[0]]
 			if score >= game.goal:
 				print "<li>Tied at %d. Sudden death</li>" % score
