@@ -192,7 +192,12 @@ class EventThread(Thread):
 			raise RuntimeError("Fetched %d-byte log file %s, but next event expected at %d" % (len(data), self.gameCon.logFilename, self.gameCon.logOffset))
 		while self.gameCon and self.gameCon.logOffset < len(data) and self.test != 0:
 			line = data[self.gameCon.logOffset:data.index('\n', self.gameCon.logOffset)+1]
+			print "%8d %s" % (self.gameCon.logOffset, line)
 			originalLen = len(line)
+			# Skip fake ending in tied game. Another temporary hack until I centralize this stuff
+			if self.gameCon.logFilename == '20160119_014340.log' and self.gameCon.logOffset in (21301, 21399, 21433, 21492, 21567, 21608, 21641, 21739, 21773, 21832, 21907, 21948):
+				self.gameCon.logOffset += originalLen
+				continue
 			line = unpretty(line)
 			# print "Searching for pattern at %s offset %d: %s" % (self.gameCon.logFilename, self.gameCon.logOffset, line)
 			for pattern, fns in eventPatterns:
