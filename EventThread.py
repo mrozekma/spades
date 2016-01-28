@@ -55,6 +55,7 @@ eventPatterns = {
 	# Team names used to have no restrictions:
 	# "(?P<team>.+) (?:make their bid|go bust): (?P<taken>NUMBER)/(?P<bid>NUMBER)": lambda team, taken, bid: {'type': 'round_summary', 'team': team, 'taken': int(taken), 'bid': int(bid)},
 	# ".+ lead NUMBER to NUMBER of NUMBER": None,
+	"It's tie! Playing an extra round!": None,
 
 	# These are unnecessary messages and generate no events
 	"Round over!": None,
@@ -67,6 +68,7 @@ eventPatterns = {
 	"USER (?:makes|fails at|makes blind|fails miserably at blind) nil!": None,
 	"USER (?:\\(USER\\) )?can (?:now|no longer) play for USER": None,
 	"USER allowed:.*": None,
+	"It's a tie! Playing an extra round!": None,
 }
 
 # [(compiled line pattern, [fun(pattern groups) -> event dict])]
