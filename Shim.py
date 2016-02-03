@@ -5,6 +5,10 @@ class Shim:
 		if log == '20150823_201536.log':
 			return None
 
+		# These are logs from when .fliptable was added and a "USER goes on a rampage" message was temporarily outputted. Nothing else happens in the games, so we skip them
+		if log in ('20160202_072421.log', '20160202_072833.log', '20160202_073116.log'):
+			return None
+
 		return log
 
 	@staticmethod
