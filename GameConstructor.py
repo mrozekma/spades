@@ -143,9 +143,6 @@ class GameConstructor:
 				return
 			if event['type'] == 'round_summary':
 				self.currentRound.end = event['ts']
-				# Shim for a buggy logfile. At some point I'll have to figure out a more centralized place to handle all these cases
-				if self.logFilename == '20160116_035923.log' and event['team'] == 'dick sledge':
-					event['team'] = 'asdf'
 				who = self.game.playersByTeamName[event['team']]
 				# Using the power of subtraction, we can figure out what the last bid was this round in old logs
 				if self.currentRound.bids[-1] is None and self.currentRound.players[-1] in who:

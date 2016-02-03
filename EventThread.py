@@ -14,6 +14,7 @@ import DB
 from DB import db, getGames
 from GameConstructor import GameConstructor
 from Log import console
+from Shim import Shim
 from WebSocket import WSSpadesHandler
 
 logURL = 'http://pileus.org/andy/spades/'
@@ -49,13 +50,10 @@ eventPatterns = {
 	"(?P<user>USER) goes blind nil!": lambda user: {'type': 'nil_signal', 'who': user, 'bid': 'blind'},
 
 	# Old/buggy message forms
-	"(?P<user1>USER)/(?P<user2>USER) bid (?P<bid1>NUMBER|nil|blind)/(?P<bid2>NUMBER|nil|blind), (?P<user3>USER)/(?P<user4>USER) bid (?P<bid3>NUMBER|nil|blind)/(?P<bid4>NUMBER|nil|blind), (?P<bags>NUMBER) bags remain": lambda user1, user2, user3, user4, bid1, bid2, bid3, bid4, bags: {'type': 'bid_recap', 'bids': {user1: bid1 if bid1 in ('nil', 'blind') else int(bid1), user2: bid2 if bid2 in ('nil', 'blind') else int(bid2), user3: bid3 if bid3 in ('nil', 'blind') else int(bid3), user4: bid4 if bid4 in ('nil', 'blind') else int(bid4)}},
-	"(.*) and (.*) are now known as .+": None, # .* because in one buggy case in 20160116_035923.log the player names were empty
-	"(?P<user1>USER)/(?P<user2>USER) are now boring": lambda user1, user2: {'type': 'teamname', 'who': (user1, user2), 'name': None},
-	# Team names used to have no restrictions:
-	# "(?P<team>.+) (?:make their bid|go bust): (?P<taken>NUMBER)/(?P<bid>NUMBER)": lambda team, taken, bid: {'type': 'round_summary', 'team': team, 'taken': int(taken), 'bid': int(bid)},
-	# ".+ lead NUMBER to NUMBER of NUMBER": None,
-	"It's tie! Playing an extra round!": None,
+	# "(?P<user1>USER)/(?P<user2>USER) bid (?P<bid1>NUMBER|nil|blind)/(?P<bid2>NUMBER|nil|blind), (?P<user3>USER)/(?P<user4>USER) bid (?P<bid3>NUMBER|nil|blind)/(?P<bid4>NUMBER|nil|blind), (?P<bags>NUMBER) bags remain": lambda user1, user2, user3, user4, bid1, bid2, bid3, bid4, bags: {'type': 'bid_recap', 'bids': {user1: bid1 if bid1 in ('nil', 'blind') else int(bid1), user2: bid2 if bid2 in ('nil', 'blind') else int(bid2), user3: bid3 if bid3 in ('nil', 'blind') else int(bid3), user4: bid4 if bid4 in ('nil', 'blind') else int(bid4)}},
+	# "(.*) and (.*) are now known as .+": None, # .* because in one buggy case in 20160116_035923.log the player names were empty
+	# "(?P<user1>USER)/(?P<user2>USER) are now boring": lambda user1, user2: {'type': 'teamname', 'who': (user1, user2), 'name': None},
+	# "It's tie! Playing an extra round!": None,
 
 	# These are unnecessary messages and generate no events
 	"Round over!": None,
@@ -161,8 +159,7 @@ class EventThread(Thread):
 			if req.status_code != 200:
 				raise RuntimeError("Server returned %d looking up log list" % req.status_code)
 			logs = map(str, lxml.html.fromstring(req.text).xpath('//a[substring-after(@href, ".")="log"]/@href'))
-			# This log file is bad and starts mid-game
-			logs.remove('20150823_201536.log')
+			logs = filter(None, map(Shim.onLogLoad, logs))
 
 			numGames = len(getGames())
 			if len(logs) < numGames:
@@ -174,7 +171,7 @@ class EventThread(Thread):
 			for log in logs:
 				if log not in db['games']:
 					console('event thread', "Starting new game for %s" % log)
-					self.gameCon = GameConstructor(log, self.onGameEnd)
+					self.gameCon = Shim.onGameCon(GameConstructor(log, self.onGameEnd))
 					break
 			else:
 				console('event thread', "No games in progress")
@@ -194,11 +191,10 @@ class EventThread(Thread):
 			line = data[self.gameCon.logOffset:data.index('\n', self.gameCon.logOffset)+1]
 			print "%8d %s" % (self.gameCon.logOffset, line)
 			originalLen = len(line)
-			# Skip fake ending in tied game. Another temporary hack until I centralize this stuff
-			if self.gameCon.logFilename == '20160119_014340.log' and self.gameCon.logOffset in (21301, 21399, 21433, 21492, 21567, 21608, 21641, 21739, 21773, 21832, 21907, 21948):
+			line = Shim.onLine(self.gameCon, self.gameCon.logOffset, unpretty(line))
+			if line is None:
 				self.gameCon.logOffset += originalLen
 				continue
-			line = unpretty(line)
 			# print "Searching for pattern at %s offset %d: %s" % (self.gameCon.logFilename, self.gameCon.logOffset, line)
 			for pattern, fns in eventPatterns:
 				match = pattern.match(line)
@@ -212,11 +208,11 @@ class EventThread(Thread):
 						event = {'ts': datetime.strptime(g['ts'], '%Y-%m-%d %H:%M:%S') + timedelta(hours = tz), 'off': self.gameCon.logOffset}
 						del g['ts']
 						event.update(fn(**g))
-						#TODO Store events, and use them when restarting the app mid-game
-						# db['events'][event['off']] = event
 						if self.test > 0:
 							self.test -= 1
-						self.gameCon.pump(event)
+						event = Shim.onEvent(self.gameCon, self.gameCon.logOffset, event)
+						if event is not None:
+							self.gameCon.pump(event)
 					# pump() may have triggered onGameEnd and killed the current gameCon
 					if self.gameCon is not None:
 						self.gameCon.logOffset += originalLen
@@ -224,7 +220,7 @@ class EventThread(Thread):
 			else:
 				line = data[self.gameCon.logOffset:]
 				line = line[:line.index('\n')]
-				raise RuntimeError("Unrecognized log line: %s" % line)
+				raise RuntimeError("Unrecognized log line at %s:%d: %s" % (self.gameCon.logFilename, self.gameCon.logOffset, line))
 		if hasattr(self.gameCon, 'game'):
 			self.gameCon.game.out()
 			WSSpadesHandler.on_game_change(self.gameCon.game)
