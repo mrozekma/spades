@@ -76,7 +76,7 @@ def header(handler, includes):
 
 	print "<div class=\"topbar\">"
 	print "<h1>%s</h1>" % bleach.clean(bodyTitle)
-	print "<div class=\"links\"><a href=\"/\">Games</a> | <a href=\"/settings\">Settings</a></div>"
+	print "<div class=\"links\"><a href=\"/games\">Games</a> | <a href=\"/settings\">Settings</a></div>"
 	print "</div>"
 
 def footer(handler):

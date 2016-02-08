@@ -3,9 +3,10 @@ from json import dumps as toJS
 from os.path import splitext
 
 import DB
-from DB import db, getGames
+from DB import db, getGames, getActiveGame
+from utils import *
 
-@get('', statics = 'games')
+@get('games', statics = 'games')
 def games(handler):
 	def makeEvent(game):
 		event = {'log': splitext(game.logFilename)[0],
@@ -27,3 +28,11 @@ def games(handler):
 	print "<script src=\"/static/third-party/fullcalendar.js\" type=\"text/javascript\"></script>"
 	print "<div id=\"calendar\"></div>"
 	print "<br><br>"
+
+@get('')
+def currentGame(handler):
+	game = getActiveGame()
+	if game is None:
+		redirect('/games')
+	else:
+		redirect("/games/%s" % splitext(game.logFilename)[0])
