@@ -236,6 +236,35 @@ def gameHistory(handler, name):
 		print "</div>"
 		HandsHeatmap("r%d-hands-heatmap" % (i + 1), round).emplace(handler)
 
+		print "<h2>Tricks</h2>"
+		print "<table class=\"past-tricks\">"
+		print "<tr>"
+		print "<th></th>"
+		for player in game.players:
+			print "<th class=\"seat-open\"><img class=\"avatar\" src=\"/player/%s/avatar\"><div class=\"username\">%s</div></th>" % (player, player)
+		print "</tr>"
+		for i, trick in enumerate(round.tricks):
+			print "<tr data-trick-number=\"%d\">" % (i + 1)
+			print "<td class=\"trick-number\"><span class=\"label label-default\">Trick %d</span></td>" % (i + 1)
+			if trick:
+				plays = [trick.playsByPlayer[player] for player in game.players]
+				lead = trick.plays[0]
+				win = trick.win
+				for play in plays:
+					print "<td class=\"trick\">"
+					if play:
+						if play == lead:
+							print "<span class=\"label label-primary tag-lead\">Lead</span>"
+						if play == win:
+							print "<span class=\"label label-success tag-winning\">Won</span>"
+					print "<img class=\"card\" src=\"/card/%s\">" % (play or 'back')
+					print "</td>"
+			else:
+				for j in range(4):
+					print "<td class=\"trick\"><img class=\"card\" src=\"/card/back\"></td>"
+			print "</tr>"
+		print "</table>"
+
 		print "</div>"
 
 @get('games/history.less')

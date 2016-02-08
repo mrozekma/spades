@@ -1,0 +1,39 @@
+table.past-tricks {
+	border: 0px;
+	border-collapse: separate;
+	border-spacing: 50px 20px;
+	margin-left: -60px;
+	tr {
+		height: ~"calc(64px + (16px + 2px) * 2)";
+		th:not(:first-child) {
+			width: 64px;
+			min-width: 64px;
+			max-width: 64px;
+			.username {
+				margin-top: 4px;
+				text-align: center;
+			}
+		}
+		td {
+			vertical-align: bottom;
+			position: relative;
+			&.trick-number {
+				.label {
+					position: absolute;
+					bottom: 33px;
+					left: -15px;
+					width: 100px;
+					margin-bottom: 10px;
+					transform: rotate(-90deg);
+				}
+			}
+			&.trick .label {
+				display: block;
+				margin-bottom: 2px;
+			}
+			img.card {
+				width: 64px;
+			}
+		}
+	}
+}

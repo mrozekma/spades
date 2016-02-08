@@ -170,7 +170,7 @@ class Round:
 		self.start = start
 		self.end = None
 		self.players = [None] * 4
-		self.bids = [None] * 4
+		self.bids = [None] * 4 # self.bids[i] made by self.players[i]
 		self.tricks = [None] * 13
 
 	def __getstate__(self):
@@ -277,7 +277,7 @@ class Trick:
 		self.start = start
 		self.end = None
 		self.leader = leader
-		self.plays = [None] * 4
+		self.plays = [None] * 4 # Starting with self.leader's play
 
 	def __getstate__(self):
 		return {k: getattr(self, k) for k in ('start', 'end', 'leader', 'plays')}
