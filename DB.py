@@ -1,66 +1,42 @@
 import os
-import shelve
-
-class PendingChange:
-	def __init__(self, shelf, key):
-		self.shelf = shelf
-		self.key = key
-
-	def __enter__(self):
-		self.value = self.shelf[self.key]
-		return self.value
-
-	def __exit__(self, type, value, tb):
-		self.shelf[self.key] = self.value
+from stasis.DiskMap import DiskMap
 
 class LoudMap:
-	def __init__(self, db, key):
-		self.db = db
+	def __init__(self, bs, key, m):
+		self.bs = bs
 		self.key = key
-		self.m = db.shelf[key]
-		for fn in ('clear', 'pop', 'popitem', 'update', '__setitem__', '__delitem__'):
-			def _(fn):
-				def override(*args, **kw):
-					try:
-						return getattr(self.m, fn)(*args, **kw)
-					finally:
-						self.db[self.key] = self.m
-				return override
-			setattr(self, fn, _(fn))
+		self.m = m
 
+	def __setitem__(self, key, value):
+		self.m[key] = value
+		self.bs[self.key][key] = value
+
+	# There's no real reason these can't be supported, but I don't use them
+	def clear(self, *args, **kw): self.unimplemented()
+	def pop(self, *args, **kw): self.unimplemented()
+	def popitem(self, *args, **kw): self.unimplemented()
+	def update(self, *args, **kw): self.unimplemented()
+	def unimplemented(self):
+		raise RuntimeError("Unimplemented LoudMap method")
+
+	# Anything not implemented here, pass-through to self.m
 	def __getattr__(self, k):
 		return getattr(self.m, k)
 
 class DB:
 	def __init__(self, dbFilename):
-		self.shelf = shelve.open(dbFilename)
-
-	def __del__(self):
-		if hasattr(self, 'shelf'):
-			self.shelf.close()
+		self.bs = DiskMap(dbFilename, create = True, cache = True)
 
 	def __contains__(self, k):
-		return k in self.shelf
+		return k in self.bs
 
 	def __getitem__(self, k):
-		rtn = self.shelf[k]
+		rtn = self.bs[k]
 		if isinstance(rtn, dict):
-			return LoudMap(self, k)
+			return LoudMap(self.bs, k, rtn)
 		return rtn
 
-	def __setitem__(self, k, v):
-		if isinstance(v, LoudMap):
-			v = v.m
-		self.shelf[k] = v
-
-	def change(self, key):
-		return PendingChange(self, key)
-
 db = DB(os.path.join(os.path.dirname(__file__), 'db'))
-
-for k in ('games',):
-	if k not in db:
-		db[k] = {}
 
 # We store this in the DB module because it's where other games are stored
 # It's set/unset by the EventThread, but not actually serialized
@@ -73,7 +49,7 @@ def setActiveGame(newActiveGame):
 
 def getGames():
 	# Get the raw map (not a LoudMap), and append the active game if there is one
-	rtn = db['games'].m.copy()
+	rtn = db['games'].all()
 	if activeGame is not None:
 		rtn[activeGame.logFilename] = activeGame
 	return rtn
