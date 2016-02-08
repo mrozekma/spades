@@ -12,14 +12,12 @@ def nav(where, game):
 	nav = Nav(brand = 'right')
 	if not game.finished:
 		nav['current round'] = '/games/%(name)s'
-	nav['history'] = '/games/%(name)s/history'
+	nav['history'] = "/games/%%(name)s/history%s" % ('#g' if game.finished else "#r%d" % len(game.rounds))
 	nav['log'] = '//pileus.org/andy/spades/%(name)s.log'
 
 	if where == 'history':
 		nav['history', 'game'] = '#g'
 		numRounds = len(game.rounds)
-		if numRounds > 0 and not game.rounds[-1].finished:
-			numRounds -= 1
 		for i in range(numRounds):
 			nav['history', "round %d" % (i + 1)] = "#r%d" % (i + 1)
 
@@ -194,45 +192,46 @@ def gameHistory(handler, name):
 	print "</div>"
 
 	for i, round in enumerate(game.rounds):
-		if not round.finished:
-			continue
 		print "<div class=\"round-box\" id=\"box-r%d\">" % (i + 1)
 
-		print "<h2>Results</h2>"
-		print "<ul>"
-		for team in game.teams:
-			printResults(round, team)
-		scores = round.score
-		if len(set(scores.values())) == 1:
-			score = scores[game.teams[0]]
-			if score >= game.goal:
-				print "<li>Tied at %d. Sudden death</li>" % score
+		if round.finished:
+			print "<h2>Results</h2>"
+			print "<ul>"
+			for team in game.teams:
+				printResults(round, team)
+			scores = round.score
+			if len(set(scores.values())) == 1:
+				score = scores[game.teams[0]]
+				if score >= game.goal:
+					print "<li>Tied at %d. Sudden death</li>" % score
+				else:
+					print "<li>Tied at %d. %d more to win</li>" % (game.goal - score)
 			else:
-				print "<li>Tied at %d. %d more to win</li>" % (game.goal - score)
-		else:
-			leader = game.teams[0] if scores[game.teams[0]] > scores[game.teams[1]] else game.teams[1]
-			follower = game.teams[0] if leader == game.teams[1] else game.teams[1]
-			if scores[leader] >= game.goal:
-				print "<li>%s win %s. %s trail by %d</li>" % (teamName(game, leader), ('exactly' if scores[leader] == game.goal else 'by %d' % (scores[leader] - game.goal)), teamName(game, follower), scores[leader] - scores[follower])
-			else:
-				print "<li>%s lead by %d. %d more to win</li>" % (teamName(game, leader), scores[leader] - scores[follower], game.goal - scores[leader])
-		print "</ul>"
+				leader = game.teams[0] if scores[game.teams[0]] > scores[game.teams[1]] else game.teams[1]
+				follower = game.teams[0] if leader == game.teams[1] else game.teams[1]
+				if scores[leader] >= game.goal:
+					print "<li>%s win %s. %s trail by %d</li>" % (teamName(game, leader), ('exactly' if scores[leader] == game.goal else 'by %d' % (scores[leader] - game.goal)), teamName(game, follower), scores[leader] - scores[follower])
+				else:
+					print "<li>%s lead by %d. %d more to win</li>" % (teamName(game, leader), scores[leader] - scores[follower], game.goal - scores[leader])
+			print "</ul>"
 
 		print "<h2>Deal</h2>"
 		print "<div class=\"deal\">"
 		deal = round.deal
-		winners = [trick.win for trick in round.tricks]
+		winners = [trick.win for trick in round.tricks if trick is not None and trick.finished]
 		for player in game.players:
 			print "<div class=\"player\">"
 			print "<img src=\"/player/%s/avatar\">" % player
 			print "<div class=\"username\">%s</div>" % player
 			print "</div>"
 			print "<div class=\"cards\">"
-			for card in deal[player]:
+			for card in deal.get(player, []):
 				cls = ['card', "card-%s" % card]
 				if card in winners:
 					cls.append('winner')
 				print "<div class=\"%s\"></div>" % ' '.join(cls)
+			for i in range(13 - (len(deal[player]) if player in deal else 0)):
+				print "<div class=\"card card-back\"></div>"
 			print "</div>"
 		print "</div>"
 		HandsHeatmap("r%d-hands-heatmap" % (i + 1), round).emplace(handler)
@@ -244,7 +243,7 @@ def historyLess(handler):
 	handler.wrappers = False
 	handler.contentType = 'text/css'
 	from Data import ordering
-	for card in ordering:
+	for card in ['back'] + ordering:
 		print """
 .cards .card-%(card)s {
     background-image: url(/card/%(card)s);

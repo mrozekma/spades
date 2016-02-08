@@ -41,7 +41,7 @@ class HandsHeatmap(Chart):
 		self.chart.type = 'heatmap'
 		self.title.text = ''
 		self.legend.enabled = False
-		self.xAxis.categories = round.players
+		self.xAxis.categories = round.game.players
 		self.yAxis.categories = ['Spades', 'Diamonds', 'Clubs', 'Hearts']
 		self.yAxis.title = ''
 		with self.colorAxis as axis:
@@ -52,7 +52,7 @@ class HandsHeatmap(Chart):
 
 		# player: ['As', '10c', ...]
 		deal = round.deal
-		data = [[xI, yI, sum(card[-1] == y[0].lower() for card in deal[x])] for xI, x in enumerate(self.xAxis.categories.get()) for yI, y in enumerate(self.yAxis.categories.get())]
+		data = [[xI, yI, sum(card[-1] == y[0].lower() for card in deal.get(x, []))] for xI, x in enumerate(self.xAxis.categories.get()) for yI, y in enumerate(self.yAxis.categories.get())]
 		self.series = [{'data': data}]
 
 	def placeholder(self):
