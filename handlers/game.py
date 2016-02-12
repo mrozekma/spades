@@ -44,7 +44,7 @@ def game(handler, name):
 	print     "<div class=\"pregame-players\">"
 	for i in range(4):
 		print   "<div class=\"pregame-player seat-open\">"
-		print     "<img class=\"avatar\" src=\"/player/-/avatar\">"
+		print     "<img class=\"avatar\" src=\"/players/-/avatar\">"
 		print     "<div class=\"username\">&lt;open&gt;</div>"
 		print   "</div>"
 	print     "</div>"
@@ -57,7 +57,7 @@ def game(handler, name):
 		print   "</div>"
 		print   "<img class=\"card\" src=\"/card/back\">"
 		print   "<div class=\"bottom\">"
-		print     "<img class=\"avatar\" src=\"/player/-/avatar\"></img>"
+		print     "<img class=\"avatar\" src=\"/players/-/avatar\"></img>"
 		print     "<div class=\"right\">"
 		print       "<div class=\"username\">&lt;open&gt;</div>"
 		print       "<div class=\"tricks\">"
@@ -76,7 +76,7 @@ def game(handler, name):
 	print       "<tr>"
 	print         "<th></th>"
 	for i in range(4):
-		print     "<th class=\"seat-open\"><img class=\"avatar\" src=\"/player/-/avatar\"><div class=\"username\">&lt;open&gt;</div></th>"
+		print     "<th class=\"seat-open\"><img class=\"avatar\" src=\"/players/-/avatar\"><div class=\"username\">&lt;open&gt;</div></th>"
 	print       "</tr>"
 	for i in range(13, 0, -1):
 		print   "<tr data-trick-number=\"%d\">" % i
@@ -102,12 +102,6 @@ def game(handler, name):
 	print     "<br><br>"
 	print   "</div>"
 	print "</div>"
-
-	# handler.callFromHeader(Chart.include)
-
-	# c = ScoreChart('score-chart', game)
-	# handler.jsOnLoad(c.js)
-	# c.placeholder()
 
 @get('games/active')
 def gamesActive(handler):
@@ -221,7 +215,7 @@ def gameHistory(handler, name):
 		winners = [trick.win for trick in round.tricks if trick is not None and trick.finished]
 		for player in game.players:
 			print "<div class=\"player\">"
-			print "<img src=\"/player/%s/avatar\">" % player
+			print "<img src=\"/players/%s/avatar\">" % player
 			print "<div class=\"username\">%s</div>" % player
 			print "</div>"
 			print "<div class=\"cards\">"
@@ -241,7 +235,7 @@ def gameHistory(handler, name):
 		print "<tr>"
 		print "<th></th>"
 		for player in game.players:
-			print "<th class=\"seat-open\"><img class=\"avatar\" src=\"/player/%s/avatar\"><div class=\"username\">%s</div></th>" % (player, player)
+			print "<th class=\"seat-open\"><img class=\"avatar\" src=\"/players/%s/avatar\"><div class=\"username\">%s</div></th>" % (player, player)
 		print "</tr>"
 		for i, trick in enumerate(round.tricks):
 			print "<tr data-trick-number=\"%d\">" % (i + 1)

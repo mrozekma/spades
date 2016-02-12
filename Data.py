@@ -48,6 +48,10 @@ class Game:
 		return [(self.players[0], self.players[2]), (self.players[1], self.players[3])]
 
 	@property
+	def partners(self):
+		return {self.players[i]: self.players[(i + 2) % 4] for i in range(4)}
+
+	@property
 	def playersByTeamName(self):
 		return {v: k for k, v in self.teamNames.iteritems()}
 

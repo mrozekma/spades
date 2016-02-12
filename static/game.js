@@ -44,7 +44,7 @@ msToString = function(ts) {
 set_player = function(handle, player) {
 	handle.data('player', player);
 	handle.toggleClass('seat-open', player == null);
-	url = '/player/' + (player ? player : '-') + '/avatar';
+	url = '/players/' + (player ? player : '-') + '/avatar';
 	username = player ? player : '<unknown>';
 	if($('.avatar', handle).attr('src') != url) {
 		$('.avatar', handle).attr('src', url);
@@ -107,7 +107,14 @@ $(document).ready(function() {
 			if(!player) {
 				return false;
 			}
-			items = {}
+			items = {
+				profile: {
+					name: "Player profile",
+					callback: function(key, opt) {
+						window.location = '/players/' + player;
+					}
+				},
+			}
 			if(barn.get('focus') != player) {
 				items.focus = {
 					name: "Force south",

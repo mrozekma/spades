@@ -17,3 +17,7 @@ def sumByKey(maps, extraMap = {}):
 		for k in m:
 			rtn[k] = rtn.get(k, 0) + m[k]
 	return rtn
+
+def getPlayerColor(username):
+	bgHex = hex(hash(username))[2:][-6:].zfill(6) # Strip the 0x prefix and take the last 6 characters (if there aren't enough, left-pad with 0s)
+	return int(bgHex[0:2], 16), int(bgHex[2:4], 16), int(bgHex[4:6], 16)

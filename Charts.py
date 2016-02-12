@@ -1,4 +1,5 @@
 from Chart import Chart, raw
+from utils import *
 
 from math import ceil
 
@@ -57,3 +58,34 @@ class HandsHeatmap(Chart):
 
 	def placeholder(self):
 		print "<div id=\"%s\" class=\"highchart hands-heatmap\"></div>" % self._id
+
+class PartnersChart(Chart):
+	def __init__(self, placeholder, data):
+		Chart.__init__(self, placeholder)
+		self.chart.type = 'pie'
+		self.title.text = ''
+		self.tooltip.enabled = False
+
+		partnerData, resultData = [], []
+		self.series = [
+			{'name': 'Partners', 'data': partnerData, 'size': '60%', 'dataLabels': {'distance': 50}},
+			{'name': 'Results', 'data': resultData, 'size': '80%', 'innerSize': '60%', 'dataLabels': {'enabled': False}},
+		]
+		for partner in sorted(data):
+			info = data[partner]
+			clr = "#%02x%02x%02x" % getPlayerColor(partner)
+			partnerData.append({
+				'name': partner,
+				'y': info['games'],
+				'color': clr,
+			})
+			resultData.append({
+				'name': 'Wins',
+				'y': info['wins'],
+				'color': clr,
+			})
+			resultData.append({
+				'name': 'Losses',
+				'y': info['games'] - info['wins'],
+				'color': clr,
+			})
