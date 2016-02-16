@@ -47,6 +47,8 @@ def player(handler, player):
 			wins['games'] += 1
 		partner = game.partners[player]
 		for round in game.rounds:
+			if not round.finished:
+				continue
 			counts['rounds'] += 1
 			bid = round.bidsByPlayer[player]
 			partnerBid = round.bidsByPlayer[partner]
