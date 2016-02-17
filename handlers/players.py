@@ -80,7 +80,8 @@ def player(handler, player):
 				if partnerTaken == 0:
 					wins['nil_defenses'] += 1
 
-	print "<h2>Counts</h2>"
+	print "<a name=\"counts\"/>"
+	print "<h2><a href=\"#counts\">Counts</a></h2>"
 	print "A round counts as a win if you bid nil and make it, or bid non-nil and don't go bust. A trick counts as a win only when you take it. Never let your partner win tricks, it hurts your stats.<br><br>"
 	print "<table class=\"counts\">"
 	print "<tr><th>&nbsp;</th><th>Played</th><th>Won</th></tr>"
@@ -92,9 +93,11 @@ def player(handler, player):
 		print "</tr>"
 	print "</table>"
 
-	print "<h2>Frequencies</h2>"
+	print "<a name=\"frequencies\"/>"
+	print "<h2><a href=\"#frequencies\">Frequencies</a></h2>"
 	def printCardCounts(title, data):
-		print "<h3>%s</h3>" % title
+		print "<a name=\"freq-%s\"/>" % title.lower()
+		print "<h3><a href=\"freq-%s\">%s</a></h3>" % (title.lower(), title)
 		for count in sorted(list(set(data.values())), reverse = True):
 			print "<div class=\"freq-cards\">"
 			print "<div class=\"count\">%d</div>" % count
@@ -106,7 +109,8 @@ def player(handler, player):
 	printCardCounts('Cards', cards)
 	printCardCounts('Leads', leads)
 
-	print "<h3>Partners</h3>"
+	print "<a name=\"partners\"/>"
+	print "<h3><a href=\"#partners\">Partners</a></h3>"
 	partners = {}
 	for game in games:
 		partner = game.partners[player]
