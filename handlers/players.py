@@ -132,6 +132,20 @@ def player(handler, player):
 	print "</table>"
 	PartnersChart('partners-chart', partners).emplace(handler)
 
+	print "<a name=\"bids\"/>"
+	print "<h3><a href=\"#bids\">Bids</a></h3>"
+	bids = {i: {'count': 0, 'made': 0} for i in range(14)}
+	for game in games:
+		for round in game.rounds:
+			if not round.finished:
+				continue
+			bid = bidValue(round.bidsByPlayer[player])
+			taken = len(round.tricksByWinner[player])
+			bids[bid]['count'] += 1
+			if (taken == 0) if (bid == 0) else (taken >= bid):
+				bids[bid]['made'] += 1
+	BidSuccessChart('bid-success-chart', bids).emplace(handler)
+
 @get('players/(?P<username>[^/]+)/avatar')
 def playerAvatar(handler, username):
 	width = height = 64

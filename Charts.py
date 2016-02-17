@@ -89,3 +89,35 @@ class PartnersChart(Chart):
 				'y': info['games'] - info['wins'],
 				'color': clr,
 			})
+
+class BidSuccessChart(Chart):
+	def __init__(self, placeholder, data):
+		Chart.__init__(self, placeholder)
+		self.chart.type = 'column'
+		self.title.text = ''
+		self.tooltip.shared = True
+		self.tooltip.formatter = raw("function() {return 'Made <b>' + this.points[1].y + '</b>/<b>' + this.points[0].y + '</b> when bidding <b>' + this.x + '</b>';}")
+		self.plotOptions.column.grouping = False
+		self.plotOptions.column.borderWidth = 0
+
+		with self.xAxis as axis:
+			axis.name = 'Bid'
+			axis.min = 0
+			axis.max = 13
+			axis.tickInterval = 1
+			axis.categories = ['Nil'] + range(1, 14)
+
+		with self.yAxis as axis:
+			axis.name = 'Count'
+			axis.min = 0
+			axis.tickInterval = 1
+
+		bid, made = [], []
+		self.series = [
+			{'name': 'Bid', 'pointPadding': .3, 'data': bid},
+			{'name': 'Made', 'pointPadding': .4, 'data': made},
+		]
+
+		for i in range(14):
+			bid.append(data[i]['count'])
+			made.append(data[i]['made'])
