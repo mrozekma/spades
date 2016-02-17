@@ -95,19 +95,23 @@ def player(handler, player):
 
 	print "<a name=\"frequencies\"/>"
 	print "<h2><a href=\"#frequencies\">Frequencies</a></h2>"
-	def printCardCounts(title, data):
-		print "<a name=\"freq-%s\"/>" % title.lower()
-		print "<h3><a href=\"freq-%s\">%s</a></h3>" % (title.lower(), title)
-		for count in sorted(list(set(data.values())), reverse = True):
-			print "<div class=\"freq-cards\">"
-			print "<div class=\"count\">%d</div>" % count
-			theseCards = [card for card, c in data.iteritems() if c == count]
-			theseCards.sort(key = ordering.index)
-			for card in theseCards:
-				print "<img src=\"/card/%s\">" % card
-			print "</div>"
-	printCardCounts('Cards', cards)
-	printCardCounts('Leads', leads)
+	print "<a name=\"bids\"/>"
+	print "<h3><a href=\"#bids\">Bids</a></h3>"
+	bids = {i: {'count': 0, 'made': 0} for i in range(14)}
+	for game in games:
+		partner = game.partners[player]
+		for round in game.rounds:
+			if not round.finished:
+				continue
+			bid = bidValue(round.bidsByPlayer[player])
+			partnerBid = bidValue(round.bidsByPlayer[partner])
+			taken = len(round.tricksByWinner[player])
+			partnerTaken = len(round.tricksByWinner[partner])
+			bids[bid]['count'] += 1
+			# Going to count a bid as "made" if you made nil, you alone made your bid (even if going bust as a team), or the team made its collective bid
+			if (taken == 0) if (bid == 0) else (taken >= bid or taken + partnerTaken >= bid + partnerBid):
+				bids[bid]['made'] += 1
+	BidSuccessChart('bid-success-chart', bids).emplace(handler)
 
 	print "<a name=\"partners\"/>"
 	print "<h3><a href=\"#partners\">Partners</a></h3>"
@@ -126,25 +130,25 @@ def player(handler, player):
 	for partner in sorted(partners):
 		info = partners[partner]
 		print "<tr>"
-		print "<td><img src=\"/players/%s/avatar\"></td>" % partner
-		print "<td class=\"progresscell\">%s</div>" % ProgressBar(info['wins'], info['games'], partner)
+		print "<td><a href=\"/players/%s\"><img src=\"/players/%s/avatar\"></a></td>" % (partner, partner)
+		print "<td class=\"progresscell\">%s</div>" % ProgressBar(info['wins'], info['games'], partner, "/players/%s" % partner)
 		print "</tr>"
 	print "</table>"
 	PartnersChart('partners-chart', partners).emplace(handler)
 
-	print "<a name=\"bids\"/>"
-	print "<h3><a href=\"#bids\">Bids</a></h3>"
-	bids = {i: {'count': 0, 'made': 0} for i in range(14)}
-	for game in games:
-		for round in game.rounds:
-			if not round.finished:
-				continue
-			bid = bidValue(round.bidsByPlayer[player])
-			taken = len(round.tricksByWinner[player])
-			bids[bid]['count'] += 1
-			if (taken == 0) if (bid == 0) else (taken >= bid):
-				bids[bid]['made'] += 1
-	BidSuccessChart('bid-success-chart', bids).emplace(handler)
+	def printCardCounts(title, data):
+		print "<a name=\"freq-%s\"/>" % title.lower()
+		print "<h3><a href=\"freq-%s\">%s</a></h3>" % (title.lower(), title)
+		for count in sorted(list(set(data.values())), reverse = True):
+			print "<div class=\"freq-cards\">"
+			print "<div class=\"count\">%d</div>" % count
+			theseCards = [card for card, c in data.iteritems() if c == count]
+			theseCards.sort(key = ordering.index)
+			for card in theseCards:
+				print "<img src=\"/card/%s\">" % card
+			print "</div>"
+	printCardCounts('Cards', cards)
+	printCardCounts('Leads', leads)
 
 @get('players/(?P<username>[^/]+)/avatar')
 def playerAvatar(handler, username):

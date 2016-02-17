@@ -101,14 +101,14 @@ class BidSuccessChart(Chart):
 		self.plotOptions.column.borderWidth = 0
 
 		with self.xAxis as axis:
-			axis.name = 'Bid'
+			axis.title.text = 'Bid'
 			axis.min = 0
 			axis.max = 13
 			axis.tickInterval = 1
 			axis.categories = ['Nil'] + range(1, 14)
 
 		with self.yAxis as axis:
-			axis.name = 'Count'
+			axis.title.text = 'Times'
 			axis.min = 0
 			axis.tickInterval = 1
 

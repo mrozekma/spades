@@ -9,8 +9,9 @@ inf = float('inf')
 class ProgressBar:
 	# zeroDivZero means the progress should be 0 if amt == total == 0. It will be 100 if False. In either case, it will be infinity if amt > 0
 	# style is a map of percentages to styles to apply to div.progress-current; the highest percentage <= this bar's percentage will be applied
-	def __init__(self, amt, total, label = None, pcnt = None, zeroDivZero = True, style = None):
+	def __init__(self, amt, total, label = None, url = None, pcnt = None, zeroDivZero = True, style = None):
 		self.label = label
+		self.url = url
 		self.amt = amt
 		self.total = total
 		if pcnt:
@@ -31,10 +32,17 @@ class ProgressBar:
 		else:
 			self.cls = ''
 
+
+		if self.url and not self.label:
+			raise ValueError("Can't have a URL without a label")
+
 	def __str__(self):
 		w = ResponseWriter()
 		if self.label:
-			print "%s " % self.label
+			if self.url:
+				print "<a href=\"%s\">%s</a>  " % (self.url, self.label)
+			else:
+				print "%s " % self.label
 		print "<div class=\"progress-total\" style=\"position: relative; top: 5px\">"
 		if self.pcnt > 0:
 			print "<div class=\"progress-current%s\" style=\"width: %d%%;\">" % (" %s" % self.cls, min(self.pcnt, 100))
