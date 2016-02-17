@@ -204,6 +204,13 @@ class EventThread(Thread):
 						# Bit of a hack. We want to rewrite any group that contains a PLAY, but there's no way to tell now. Currently all those groups are named 'play', so we only rewrite those
 						if 'play' in g:
 							g['play'] = unpretty(g['play'])
+						# Same hack with USER
+						for k in ('user', 'user1', 'user2'):
+							if k in g:
+								shimmed = Shim.onUsername(g[k])
+								if shimmed != g[k]:
+									self.gameCon.usernameShims[shimmed] = g[k]
+									g[k] = shimmed
 						tz = int(round((datetime.now() - datetime.utcnow()).total_seconds() / 3600))
 						event = {'ts': datetime.strptime(g['ts'], '%Y-%m-%d %H:%M:%S') + timedelta(hours = tz), 'off': self.gameCon.logOffset}
 						del g['ts']

@@ -6,6 +6,7 @@ class GameConstructor:
 		self.logFilename = logFilename
 		self.logOffset = 0
 		self.onCommit = onCommit
+		self.usernameShims = {} # shimmed username -> real username. Used for constructing default teamnames
 
 	def mismatch(self, event):
 		if hasattr(self, 'game'):
@@ -75,7 +76,7 @@ class GameConstructor:
 						del self.players
 						for team in self.game.teams:
 							if team not in self.game.teamNames:
-								self.game.teamNames[team] = '/'.join(team)
+								self.game.teamNames[team] = '/'.join(self.usernameShims.get(name, name) for name in team)
 				if not hasattr(self, 'currentRound'):
 					self.currentRound = Round(event['ts'])
 					self.currentRound.game = self.game

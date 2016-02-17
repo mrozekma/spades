@@ -1,5 +1,13 @@
 class Shim:
 	@staticmethod
+	def onUsername(username):
+		# andy753421 sometimes joins from his phone
+		if username == 'andydroid':
+			return 'andy753421'
+
+		return username
+
+	@staticmethod
 	def onLogLoad(log):
 		# This is the first log created when logging was first added to the bot. It starts mid-game, so we skip it
 		if log == '20150823_201536.log':
