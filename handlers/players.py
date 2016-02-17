@@ -37,7 +37,7 @@ def player(handler, player):
 
 	print "<img class=\"avatar\" src=\"/players/%s/avatar\">" % player
 
-	counts = OrderedDict((cat, 0) for cat in ('games', 'rounds', 'tricks'))
+	counts = OrderedDict((cat, 0) for cat in ('games', 'rounds', 'tricks', 'nils', 'blind_nils', 'nil_defenses'))
 	wins = {cat: 0 for cat in counts}
 	cards = {card: 0 for card in ordering}
 	leads = {card: 0 for card in ordering}
@@ -67,8 +67,18 @@ def player(handler, player):
 					elif trick.winner == partner:
 						partnerTaken += 1
 			# "Won" if player's nil was successful or the player didn't go nil and the team made their bid
-			if (taken == 0 if bid in ('nil', 'blind') else taken + partnerTaken >= bid + bidValue(partnerBid)):
+			if bid in ('nil', 'blind'):
+				cat = {'nil': 'nils', 'blind': 'blind_nils'}[bid]
+				counts[cat] += 1
+				if taken == 0:
+					wins[cat] += 1
+					wins['rounds'] += 1
+			elif taken + partnerTaken >= bid + bidValue(partnerBid):
 				wins['rounds'] += 1
+			if partnerBid in ('nil', 'blind'):
+				counts['nil_defenses'] += 1
+				if partnerTaken == 0:
+					wins['nil_defenses'] += 1
 
 	print "<h2>Counts</h2>"
 	print "A round counts as a win if you bid nil and make it, or bid non-nil and don't go bust. A trick counts as a win only when you take it. Never let your partner win tricks, it hurts your stats.<br><br>"
@@ -76,7 +86,7 @@ def player(handler, player):
 	print "<tr><th>&nbsp;</th><th>Played</th><th>Won</th></tr>"
 	for cat, count in counts.iteritems():
 		print "<tr>"
-		print "<td>%s</td>" % cat.title()
+		print "<td>%s</td>" % ' '.join(word.title() for word in cat.split('_'))
 		print "<td>%d</td>" % count
 		print "<td class=\"progresscell\">%s</td>" % ProgressBar(wins[cat], count)
 		print "</tr>"
