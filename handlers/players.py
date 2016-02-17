@@ -84,11 +84,9 @@ def player(handler, player):
 	print "<h2><a href=\"#counts\">Counts</a></h2>"
 	print "A round counts as a win if you bid nil and make it, or bid non-nil and don't go bust. A trick counts as a win only when you take it. Never let your partner win tricks, it hurts your stats.<br><br>"
 	print "<table class=\"counts\">"
-	print "<tr><th>&nbsp;</th><th>Played</th><th>Won</th></tr>"
 	for cat, count in counts.iteritems():
 		print "<tr>"
 		print "<td>%s</td>" % ' '.join(word.title() for word in cat.split('_'))
-		print "<td>%d</td>" % count
 		print "<td class=\"progresscell\">%s</td>" % ProgressBar(wins[cat], count)
 		print "</tr>"
 	print "</table>"
