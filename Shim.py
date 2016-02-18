@@ -50,4 +50,8 @@ class Shim:
 		if gameCon.logFilename == '20160119_014340.log' and offset in (18804, 18862, 18896, 18955, 19030, 19071, 19104, 19162, 19196, 19196, 19255, 19255, 19330, 19371):
 			return None
 
+		# Game was aborted and then the bot went down without saving, and the game continued when it came back up
+		if gameCon.logFilename == '20160217_071027.log' and offset == 215:
+			return None
+
 		return event
