@@ -225,8 +225,6 @@ class EventThread(Thread):
 						self.gameCon.logOffset += originalLen
 					break
 			else:
-				line = data[self.gameCon.logOffset:]
-				line = line[:line.index('\n')]
 				raise RuntimeError("Unrecognized log line at %s:%d: %s" % (self.gameCon.logFilename, self.gameCon.logOffset, line))
 		if hasattr(self.gameCon, 'game'):
 			self.gameCon.game.out()

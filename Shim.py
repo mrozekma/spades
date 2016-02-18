@@ -33,6 +33,10 @@ class Shim:
 		if gameCon.logFilename == '20160116_035923.log' and offset in (355, 407, 475, 1340, 1398):
 			return None
 
+		# The tie message: "It's tie! Playing an extra round!"
+		if gameCon.logFilename == '20160119_014340.log' and offset == 19671:
+			return "2016-01-28 05:10:47 | It's a tie! Playing an extra round!\n"
+
 		return line
 
 	@staticmethod
@@ -41,5 +45,9 @@ class Shim:
 		if gameCon.logFilename == '20160116_035923.log' and offset == 7483:
 			event['team'] = 'asdf'
 			return event
+
+		# The first time we ever had a tied game, and the sudden death round didn't happen
+		if gameCon.logFilename == '20160119_014340.log' and offset in (18804, 18862, 18896, 18955, 19030, 19071, 19104, 19162, 19196, 19196, 19255, 19255, 19330, 19371):
+			return None
 
 		return event
