@@ -3,7 +3,7 @@ from Data import ordering, bidValue
 from DB import getGames
 from ProgressBar import ProgressBar
 from utils import *
-from rorn.Box import ErrorBox
+from rorn.Box import ErrorBox, WarningBox
 
 from bleach import clean
 from collections import OrderedDict
@@ -27,7 +27,7 @@ def players(handler):
 		print "</div>"
 
 @get('players/(?P<player>[^/]+)', statics = 'player')
-def player(handler, player):
+def player(handler, player, q = None):
 	handler.title(player)
 	handler.callFromHeader(Chart.include)
 	allGames = getGames().values()
@@ -37,14 +37,18 @@ def player(handler, player):
 
 	print "<img class=\"avatar\" src=\"/players/%s/avatar\">" % player
 
+	if q is not None:
+		print WarningBox("Ignoring query (unimplemented): <b>%s</b>" % clean(q))
+
 	counts = OrderedDict((cat, 0) for cat in ('games', 'rounds', 'tricks', 'nils', 'blind_nils', 'nil_defenses'))
 	wins = {cat: 0 for cat in counts}
 	cards = {card: 0 for card in ordering}
 	leads = {card: 0 for card in ordering}
 	for game in games:
-		counts['games'] += 1
-		if player in (game.winner or []):
-			wins['games'] += 1
+		if game.finished:
+			counts['games'] += 1
+			if player in (game.winner or []):
+				wins['games'] += 1
 		partner = game.partners[player]
 		for round in game.rounds:
 			if not round.finished:
@@ -86,8 +90,28 @@ def player(handler, player):
 	print "<table class=\"counts\">"
 	for cat, count in counts.iteritems():
 		print "<tr>"
-		print "<td>%s</td>" % ' '.join(word.title() for word in cat.split('_'))
-		print "<td class=\"progresscell\">%s</td>" % ProgressBar(wins[cat], count)
+		print "<td>"
+		if cat == 'games':
+			print "<img data-toggle=\"game-list\" src=\"/static/images/expand.png\">&nbsp;",
+		print "%s" % ' '.join(word.title() for word in cat.split('_'))
+		print "</td>"
+		print "<td class=\"progresscell\">"
+		print ProgressBar(wins[cat], count)
+		if cat == 'games':
+			print "<table id=\"game-list\">"
+			print "<tr><th>Result</th><th>Opponent</th><th>Score</th><th>When</th><th>&nbsp;</th></tr>"
+			for game in sorted(games, key = lambda game: game.end):
+				if not game.finished:
+					continue
+				name = os.path.splitext(game.logFilename)[0]
+				won = (player in game.winner)
+				partner = game.partners[player]
+				myTeam, otherTeam = game.teams
+				if player not in myTeam:
+					myTeam, otherTeam = otherTeam, myTeam
+				print "<tr><td><img src=\"/static/images/icons/%s.png\">&nbsp;%s</td> <td>%s</td><td>%d to %d</td><td>%s</td><td><a class=\"fancy mini\" href=\"/games/%s/history\">game history</a> <a class=\"fancy mini\" href=\"?q=game:%s\">focus stats on this game</a></td></tr>" % ('success' if won else 'error', 'Won' if won else 'Lost', annotatedTeamName(game, otherTeam), game.score[myTeam], game.score[otherTeam], game.end.strftime('%Y-%m-%d %H:%M:%S'), name, name)
+			print "</table>"
+		print "</td>"
 		print "</tr>"
 	print "</table>"
 

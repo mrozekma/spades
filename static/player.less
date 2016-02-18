@@ -10,6 +10,10 @@ h2 a, h3 a {
 	}
 }
 
+img[src="/static/images/expand.png"], img[src="/static/images/collapse.png"] {
+	cursor: pointer;
+}
+
 table tr td.progresscell {
 	width: 100%;
 
@@ -18,20 +22,32 @@ table tr td.progresscell {
 	}
 }
 
+table#game-list {
+	display: none;
+
+	td {
+		padding-right: 5px;
+		white-space: nowrap;
+	}
+}
+
 table.counts {
 	margin-left: 15px;
 	width: 50%;
 
-	tr {
-		th {
-			padding-right: 15px;
-		}
+	> thead, > tbody {
+		> tr {
+			> th {
+				padding-right: 15px;
+			}
 
-		td:first-child {
-			text-align: right;
-			padding-right: 15px;
-			font-weight: bold;
-			white-space: nowrap;
+			> td:first-child {
+				vertical-align: top;
+				text-align: right;
+				padding-right: 15px;
+				font-weight: bold;
+				white-space: nowrap;
+			}
 		}
 	}
 }

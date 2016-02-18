@@ -110,13 +110,6 @@ def gamesActive(handler):
 		ErrorBox.die("No currently active Spades game")
 	redirect("/games/%s" % splitext(game.logFilename)[0])
 
-def teamName(game, team):
-	name = game.teamNames[team]
-	players = '/'.join(team)
-	if name == players:
-		return name
-	return "%s (%s)" % (name, players)
-
 def printResults(round, team):
 	game = round.game
 	bid = sum(bidValue(round.bidsByPlayer[player]) for player in team)
@@ -124,7 +117,7 @@ def printResults(round, team):
 
 	if taken >= bid:
 		change = 10 * bid
-		print "<li>%s bid %d, made it with %d (+%d)" % (teamName(game, team), bid, taken, 10 * bid)
+		print "<li>%s bid %d, made it with %d (+%d)" % (annotatedTeamName(game, team), bid, taken, 10 * bid)
 		print "<ul>"
 		if taken > bid:
 			change += taken - bid
@@ -135,7 +128,7 @@ def printResults(round, team):
 				print "<li>Bagged out (-%d)</li>" % (10 * game.bagLimit)
 	else:
 		change = -10 * bid
-		print "<li>%s bid %d, set with %d (-%d)" % (teamName(game, team), bid, taken, 10 * bid)
+		print "<li>%s bid %d, set with %d (-%d)" % (annotatedTeamName(game, team), bid, taken, 10 * bid)
 		print "<ul>"
 	for player in team:
 		bid = round.bidsByPlayer[player]
@@ -204,9 +197,9 @@ def gameHistory(handler, name):
 				leader = game.teams[0] if scores[game.teams[0]] > scores[game.teams[1]] else game.teams[1]
 				follower = game.teams[0] if leader == game.teams[1] else game.teams[1]
 				if scores[leader] >= game.goal:
-					print "<li>%s win %s. %s trail by %d</li>" % (teamName(game, leader), ('exactly' if scores[leader] == game.goal else 'by %d' % (scores[leader] - game.goal)), teamName(game, follower), scores[leader] - scores[follower])
+					print "<li>%s win %s. %s trail by %d</li>" % (annotatedTeamName(game, leader), ('exactly' if scores[leader] == game.goal else 'by %d' % (scores[leader] - game.goal)), annotatedTeamName(game, follower), scores[leader] - scores[follower])
 				else:
-					print "<li>%s lead by %d. %d more to win</li>" % (teamName(game, leader), scores[leader] - scores[follower], game.goal - scores[leader])
+					print "<li>%s lead by %d. %d more to win</li>" % (annotatedTeamName(game, leader), scores[leader] - scores[follower], game.goal - scores[leader])
 			print "</ul>"
 
 		print "<h2>Deal</h2>"
