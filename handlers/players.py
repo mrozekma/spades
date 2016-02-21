@@ -7,6 +7,7 @@ from rorn.Box import ErrorBox, WarningBox
 
 from bleach import clean
 from collections import OrderedDict
+from datetime import datetime
 import os
 from PIL import Image, ImageDraw, ImageFont
 from StringIO import StringIO
@@ -100,7 +101,7 @@ def player(handler, player, q = None):
 		if cat == 'games':
 			print "<table id=\"game-list\">"
 			print "<tr><th>Result</th><th>Opponent</th><th>Score</th><th>When</th><th>&nbsp;</th></tr>"
-			for game in sorted(games, key = lambda game: game.end):
+			for game in sorted(games, key = lambda game: game.end or datetime.now()):
 				if not game.finished:
 					continue
 				name = os.path.splitext(game.logFilename)[0]
