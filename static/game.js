@@ -214,6 +214,8 @@ $(document).ready(function() {
 			set_player(seat, player);
 			set_player($($('table.past-tricks tr th')[i + 1]), player);
 
+			$('.tag-passing', seat).toggle('passed' in data && !data['passed'][player]);
+			$('.tag-passed', seat).toggle('passed' in data && data['passed'][player]);
 			$('.tag-lead', seat).toggle(player != null && data['leader'] == player);
 			$('.tag-turn', seat).toggle(player != null && data['turn'] == player);
 			$('.tag-winning', seat).toggle(player != null && data['winning'] == player);
@@ -245,14 +247,15 @@ $(document).ready(function() {
 		});
 
 		// It's possible (if unlikely) to have a turn field but no turn_started if we happen to pull from the server at the wrong instant
-		anchor = $($('.tag-turn:visible')[0]);
-		if(data['turn_started']) {
+		anchor = $('.tag-turn:visible,.tag-passing:visible');
+		if(data['turn_started'] || data['passed']) {
 			// Update the turn clock every second.
 			// There will only ever be one visible turn tag
 			start = data['turn_started'] + time_off;
 			turn_clock = null;
 			update_clock = function() {
-				anchor.html('Turn<br>' + msToString(Date.now() - start));
+				txt = anchor.hasClass('tag-turn') ? 'Turn' : anchor.hasClass('tag-passing') ? 'Passing' : '???';
+				anchor.html(txt + '<br>' + msToString(Date.now() - start));
 			};
 			turn_clock = setInterval(update_clock, 1000);
 			update_clock();
@@ -260,7 +263,7 @@ $(document).ready(function() {
 			anchor.text('Turn');
 		}
 
-		// For asthetic reasons, we only leave enough room for two rows of tags above each card, and turn takes both.
+		// For aesthetic reasons, we only leave enough room for two rows of tags above each card, and turn takes both.
 		// If the current player is also the leader, we hide that tag (it should be obvious they're leading since it's their turn and nobody has played)
 		if(data['leader'] == data['turn']) {
 			$('.tag-lead').hide();

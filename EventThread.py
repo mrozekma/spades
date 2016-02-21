@@ -48,21 +48,15 @@ eventPatterns = {
 	"(?P<team>TEAM) (?:make their bid|go bust): (?P<taken>NUMBER)/(?P<bid>NUMBER)": lambda team, taken, bid: {'type': 'round_summary', 'team': team, 'taken': int(taken), 'bid': int(bid)},
 	"(?P<user>USER) goes nil!": lambda user: {'type': 'nil_signal', 'who': user, 'bid': 'nil'},
 	"(?P<user>USER) goes blind nil!": lambda user: {'type': 'nil_signal', 'who': user, 'bid': 'blind'},
-
-	# Old/buggy message forms
-	# "(?P<user1>USER)/(?P<user2>USER) bid (?P<bid1>NUMBER|nil|blind)/(?P<bid2>NUMBER|nil|blind), (?P<user3>USER)/(?P<user4>USER) bid (?P<bid3>NUMBER|nil|blind)/(?P<bid4>NUMBER|nil|blind), (?P<bags>NUMBER) bags remain": lambda user1, user2, user3, user4, bid1, bid2, bid3, bid4, bags: {'type': 'bid_recap', 'bids': {user1: bid1 if bid1 in ('nil', 'blind') else int(bid1), user2: bid2 if bid2 in ('nil', 'blind') else int(bid2), user3: bid3 if bid3 in ('nil', 'blind') else int(bid3), user4: bid4 if bid4 in ('nil', 'blind') else int(bid4)}},
-	# "(.*) and (.*) are now known as .+": None, # .* because in one buggy case in 20160116_035923.log the player names were empty
-	# "(?P<user1>USER)/(?P<user2>USER) are now boring": lambda user1, user2: {'type': 'teamname', 'who': (user1, user2), 'name': None},
-	# "It's tie! Playing an extra round!": None,
+	"(?P<user1>USER)/(?P<user2>USER): select a card to pass \\(/msg USER \\.pass <card>\\)": lambda user1, user2: {'type': 'passing', 'who': (user1, user2)},
+	"(?P<user>USER) passes a card": lambda user: {'type': 'passed', 'who': user, 'finished': False},
+	"Cards have been passed!": lambda: {'type': 'passed', 'finished': True},
 
 	# These are unnecessary messages and generate no events
 	"Round over!": None,
 	"TEAM lead NUMBER to NUMBER of NUMBER": None,
 	"tied at NUMBER of NUMBER": None,
 	"TEAM bag (?:way )?out": None,
-	"USER/USER: select a card to pass \\(/msg USER \\.pass <card>\\)": None,
-	"USER passes a card": None,
-	"Cards have been passed!": None,
 	"USER (?:makes|fails at|makes blind|fails miserably at blind) nil!": None,
 	"USER (?:\\(USER\\) )?can (?:now|no longer) play for USER": None,
 	"USER allowed:.*": None,

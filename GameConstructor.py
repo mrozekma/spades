@@ -123,6 +123,21 @@ class GameConstructor:
 			if event['type'] == 'bid' and event['bid'] in ('nil', 'blind'):
 				return
 
+			if event['type'] == 'passing':
+				if not hasattr(self, 'passed'):
+					self.passed = {}
+					self.thisPlayStart = event['ts'] # This is used by Game.runState
+				self.passed.update({who: False for who in event['who']})
+				return
+			if event['type'] == 'passed':
+				if event['finished']:
+					del self.passed
+					del self.thisPlayStart
+				elif event['who'] not in self.passed:
+					raise RuntimeError("Bad pass")
+				else:
+					self.passed[event['who']] = True
+				return
 			if event['type'] == 'playing':
 				self.currentPlayer = event['who']
 				if not hasattr(self, 'currentTrick'):

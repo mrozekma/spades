@@ -118,6 +118,9 @@ class Game:
 			                        ("%s, and %s to %d" % (', '.join(rtn['pregame_players'][:-1]), rtn['pregame_players'][-1], self.goal)))
 		else:
 			rtn['description'] = ["Round %d" % len(self.rounds)]
+			if hasattr(self, 'gameCon') and hasattr(self.gameCon, 'passed'):
+				rtn['passed'] = self.gameCon.passed
+				rtn['turn_started'] = dtToJSTime(self.gameCon.thisPlayStart)
 			# Round data is in round player order, but the client needs it in game player order
 			def order(data):
 				data = {player: v for player, v in zip(self.currentRound.players, data)}

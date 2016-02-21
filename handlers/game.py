@@ -51,6 +51,8 @@ def game(handler, name):
 	for seat in ('south', 'west', 'north', 'east'):
 		print "<div class=\"seat seat-%s seat-open\">" % seat
 		print   "<div class=\"tags\">"
+		print     "<span class=\"label label-danger tag-passing\">Passing</span>"
+		print     "<span class=\"label label-success tag-passed\">Passed</span>"
 		print     "<span class=\"label label-danger tag-turn\">Turn</span>"
 		print     "<span class=\"label label-success tag-winning\">Winning</span>"
 		print     "<span class=\"label label-primary tag-lead\">Lead</span>"
