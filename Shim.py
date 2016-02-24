@@ -8,6 +8,17 @@ class Shim:
 		return username
 
 	@staticmethod
+	def onPlayerColor(username):
+		# [01:25:22] < loxodes> can I be orange?
+		# [01:25:34] < necroyeti> ORANGE
+		# [01:25:38] < mrozekma> do you want to be orange, or is this subtle social commentary?
+		# [01:25:46] < loxodes> yes?
+		if username == 'loxodes':
+			return 255, 127, 0
+
+		return None
+
+	@staticmethod
 	def onLogLoad(log):
 		# This is the first log created when logging was first added to the bot. It starts mid-game, so we skip it
 		if log == '20150823_201536.log':

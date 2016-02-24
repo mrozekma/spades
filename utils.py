@@ -1,5 +1,7 @@
 import time
 
+from Shim import Shim
+
 from rorn.utils import *
 
 def ensureIter(l):
@@ -19,8 +21,19 @@ def sumByKey(maps, extraMap = {}):
 	return rtn
 
 def getPlayerColor(username):
-	bgHex = hex(hash(username))[2:][-6:].zfill(6) # Strip the 0x prefix and take the last 6 characters (if there aren't enough, left-pad with 0s)
-	return int(bgHex[0:2], 16), int(bgHex[2:4], 16), int(bgHex[4:6], 16)
+	shimmed = Shim.onPlayerColor(username)
+	if shimmed is None:
+		bgHex = hex(hash(username))[2:][-6:].zfill(6) # Strip the 0x prefix and take the last 6 characters (if there aren't enough, left-pad with 0s)
+		r, g, b = int(bgHex[0:2], 16), int(bgHex[2:4], 16), int(bgHex[4:6], 16)
+		if getBrightness(r, g, b) > 230:
+			return getPlayerColor(username + '-')
+	else:
+		r, g, b = shimmed
+	return r, g, b
+
+def getBrightness(r, g, b):
+	# http://stackoverflow.com/a/946734/309308
+	return r * .299 + g * .587 + b * .114
 
 def annotatedTeamName(game, team):
 	name = game.teamNames[team]
