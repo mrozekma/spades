@@ -231,9 +231,9 @@ def gameHistory(handler, name):
 		for player in game.players:
 			print "<th class=\"seat-open\"><img class=\"avatar\" src=\"/players/%s/avatar\"><div class=\"username\">%s</div></th>" % (player, player)
 		print "</tr>"
-		for i, trick in enumerate(round.tricks):
-			print "<tr data-trick-number=\"%d\">" % (i + 1)
-			print "<td class=\"trick-number\"><span class=\"label label-default\">Trick %d</span></td>" % (i + 1)
+		for j, trick in enumerate(round.tricks):
+			print "<tr data-trick-number=\"%d\">" % (j + 1)
+			print "<td class=\"trick-number\"><span class=\"label label-default\">Trick %d</span></td>" % (j + 1)
 			if trick:
 				plays = [trick.playsByPlayer[player] for player in game.players]
 				lead = trick.plays[0]
@@ -252,6 +252,7 @@ def gameHistory(handler, name):
 					print "<td class=\"trick\"><img class=\"card\" src=\"/card/back\"></td>"
 			print "</tr>"
 		print "</table>"
+		TricksTakenChart("r%d-round-events" % (i + 1), round).emplace(handler)
 
 		print "</div>"
 

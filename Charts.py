@@ -1,4 +1,5 @@
 from Chart import Chart, raw
+from Data import bidValue
 from utils import *
 
 from math import ceil
@@ -58,6 +59,68 @@ class HandsHeatmap(Chart):
 
 	def placeholder(self):
 		print "<div id=\"%s\" class=\"highchart hands-heatmap\"></div>" % self._id
+
+class TricksTakenChart(Chart):
+	def __init__(self, placeholder, round):
+		Chart.__init__(self, placeholder)
+
+		self.chart.type = 'column'
+		self.title.text = ''
+		self.xAxis.categories = ["Trick %d" % (i + 1) for i in range(13)]
+		# self.yAxis = [
+			# {'title': {'text': 'Tricks'}, 'min': 0, 'max': 13, 'tickInterval': 1},
+			# {'title': {'text': 'Bids'}, 'opposite': True, 'min': 0, 'max': 13},
+		# ]
+		with self.yAxis as axis:
+			axis.title.text = 'Tricks'
+			axis.min = 0
+			axis.max = 13
+			axis.tickInterval = 1
+
+			axis.plotLines = plotLines = []
+			clrs = ['red', 'green']
+			import sys
+			for team in round.game.teams:
+				plotLines.append({
+					'label': {'text': annotatedTeamName(round.game, team)},
+					'width': 2,
+					'color': clrs.pop(0),
+					'value': sum(bidValue(round.bidsByPlayer[player]) for player in team),
+				})
+			if plotLines[0]['value'] == plotLines[1]['value']:
+				plotLines[0]['label']['text'] = 'Both teams'
+				plotLines.pop(1)
+		self.tooltip.enabled = False
+		self.plotOptions.column.stacking = 'normal'
+
+		# Not sure if there's a nice use for flags
+		# Was planning to mark when players made their bid, but it doesn't look good and the team bids are obvious from the plotlines
+		# flagSeries = {
+			# 'type': 'flags',
+			# 'data': [],
+			# 'color': '#4572a7',
+			# 'shape': 'flag',
+			# 'onSeries': '',
+			# 'showInLegend': False,
+			# 'shape': 'squarepin',
+		# }
+
+		winners = [trick.winner if trick else None for trick in round.tricks]
+		taken = {player: [0] for player in round.game.players}
+		for winner in winners:
+			for player, l in taken.iteritems():
+				l.append(l[-1] + (1 if player == winner else 0))
+		for l in taken.values():
+			l.pop(0)
+		self.series = [{
+			'name': player,
+			'stack': "Team %d" % (i%2 + 1),
+			'color': "#%02x%02x%02x" % getPlayerColor(player),
+			'data': taken[player],
+		} for i, player in enumerate(round.game.players)]
+
+	def placeholder(self):
+		print "<div id=\"%s\" class=\"highchart tricks-taken\"></div>" % self._id
 
 class PartnersChart(Chart):
 	def __init__(self, placeholder, data):
