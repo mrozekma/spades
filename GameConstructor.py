@@ -134,7 +134,8 @@ class GameConstructor:
 					del self.passed
 					del self.thisPlayStart
 				elif event['who'] not in self.passed:
-					raise RuntimeError("Bad pass")
+					# We don't know which player this pass was actually for, so we just ignore it
+					pass # No pun intended
 				else:
 					self.passed[event['who']] = True
 				return
