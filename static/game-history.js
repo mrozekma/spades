@@ -2,9 +2,9 @@ $(document).ready(function() {
 	links = $('.nav .dropdown-menu li a[href^="#r"]');
 	max_round = (links.length > 0) ? parseInt(links.last().attr('href').substr(2), 10) : 0;
 	$(window).bind('hashchange', function(e) {
-		match = window.location.hash.match(/^#r([0-9]+)$/);
+		match = window.location.hash.match(/^#r(c|[0-9]+)$/);
 		if(match) {
-			round = parseInt(match[1], 10);
+			round = (match[1] == 'c') ? max_round : parseInt(match[1], 10);
 			if(round < 1) {
 				window.location.hash = '#g';
 				return;

@@ -12,7 +12,7 @@ def nav(where, game):
 	nav = Nav(brand = 'right')
 	if not game.finished:
 		nav['current round'] = '/games/%(name)s'
-	nav['history'] = "/games/%%(name)s/history%s" % ('#g' if game.finished else "#r%d" % len(game.rounds))
+	nav['history'] = "/games/%%(name)s/history%s" % ('#g' if game.finished else '#rc')
 	nav['log'] = '//pileus.org/andy/spades/%(name)s.log'
 
 	if where == 'history':
@@ -155,7 +155,6 @@ def gameHistory(handler, name):
 	game = getGames().get(logFilename, None)
 	if game is None:
 		ErrorBox.die("Game not found", name)
-	teams = game.teams
 
 	handler.title(game.friendlyName)
 	nav('history', game)
