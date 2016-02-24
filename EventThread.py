@@ -9,6 +9,7 @@ from tornado import gen
 from tornado.websocket import websocket_connect
 from tornado.ioloop import IOLoop
 import traceback
+from unidecode import unidecode
 
 import DB
 from DB import db, getGames
@@ -79,7 +80,7 @@ def unpretty(str):
 	}
 	for (uc, plain) in suits.iteritems():
 		str = str.replace(uc, plain)
-	return str.encode('ascii')
+	return unidecode(str.decode('utf-8'))
 
 class EventThread(Thread):
 	def __init__(self, mode):
