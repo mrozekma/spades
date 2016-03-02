@@ -85,7 +85,7 @@ class TricksTakenChart(Chart):
 					'label': {'text': annotatedTeamName(round.game, team)},
 					'width': 2,
 					'color': clrs.pop(0),
-					'value': sum(bidValue(round.bidsByPlayer[player]) for player in team),
+					'value': sum(bidValue(round.bidsByPlayer.get(player, 0)) for player in team),
 				})
 			if plotLines[0]['value'] == plotLines[1]['value']:
 				plotLines[0]['label']['text'] = 'Both teams'
