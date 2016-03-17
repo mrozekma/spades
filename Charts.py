@@ -14,6 +14,7 @@ class ScoreChart(Chart):
 		scores = [{team: 0 for team in teams}] + [round.score for round in game.rounds if round.finished]
 
 		self.chart.type = 'line'
+		self.chart.marginTop = 30
 		self.title.text = ''
 		self.tooltip.shared = True
 		self.plotOptions.line.dataLabels.enabled = True
@@ -32,7 +33,39 @@ class ScoreChart(Chart):
 		if game.goal <= 1000:
 			self.yAxis.tickInterval = 100
 
-		self.series = [{'name': game.teamNames[team], 'data': [score[team] for score in scores]} for team in teams]
+		flags = {team: [] for team in teams}
+		flagSeries = [{
+			'type': 'flags',
+			'data': data,
+			'color': '#4572a7',
+			'shape': 'flag',
+			'onSeries': '/'.join(team),
+			'showInLegend': False,
+			'shape': 'squarepin',
+			'y': -50,
+		} for team, data in flags.iteritems()]
+
+		for team in teams:
+			bags = 0
+			for i, round in enumerate(game.rounds):
+				if not round.finished:
+					continue
+				toShow = []
+				bids = [round.bidsByPlayer[player] for player in team]
+				taken = [len(round.tricksByWinner[player]) for player in team]
+				for player, bid, took in zip(team, bids, taken):
+					if bid in ('nil', 'blind'):
+						toShow.append(('N', "%s %s %s" % (player, 'made' if took == 0 else 'failed', 'nil' if bid == 'nil' else 'blind nil')))
+				thisBags = sum(taken) - sum(map(bidValue, bids))
+				if thisBags > 0:
+					bags += thisBags
+					if bags >= game.bagLimit:
+						bags %= game.bagLimit
+						toShow.append(('B', 'Bagged out'))
+				if toShow:
+					flags[team].append({'x': i + 1, 'title': ','.join(title for title, text in toShow), 'text': '<br>'.join(text for title, text in toShow)})
+
+		self.series = [{'id': '/'.join(team), 'name': game.teamNames[team], 'data': [score[team] for score in scores]} for team in teams] + flagSeries
 		self.series[0]['color'] = '#a00';
 		self.series[1]['color'] = '#00a';
 
