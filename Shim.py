@@ -51,7 +51,7 @@ class Shim:
 		return line
 
 	@staticmethod
-	def onEvent(gameCon,offset, event):
+	def onEvent(gameCon, offset, event):
 		# Problem where team names weren't saved. The team name in this event is 'dick sledge', but it should've been 'asdf'
 		if gameCon.logFilename == '20160116_035923.log' and offset == 7483:
 			event['team'] = 'asdf'
@@ -63,6 +63,10 @@ class Shim:
 
 		# Game was aborted and then the bot went down without saving, and the game continued when it came back up
 		if gameCon.logFilename == '20160217_071027.log' and offset == 215:
+			return None
+
+		# The bot went down without saving and andy753421 joined twice
+		if gameCon.logFilename == '20160503_020556.log' and offset == 125:
 			return None
 
 		return event

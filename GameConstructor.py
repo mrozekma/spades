@@ -25,7 +25,6 @@ class GameConstructor:
 		return l[-1] is not None
 
 	def pump(self, event):
-		print event
 		if event['off'] < self.logOffset:
 			raise RuntimeError("Received event at offset %d, but already at offset %d" % (event['off'], self.logOffset))
 
