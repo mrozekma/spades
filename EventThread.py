@@ -62,7 +62,7 @@ eventPatterns = {
 	"USER (?:\\(USER\\) )?can (?:now|no longer) play for USER": None,
 	"USER allowed:.*": None,
 	"It's a tie! Playing an extra round!": None,
-	"USER goes on a rampage": None,
+	"(?P<user>USER) goes on a rampage": lambda user: {'type': 'game_abort', 'who': user},
 }
 
 # [(compiled line pattern, [fun(pattern groups) -> event dict])]
