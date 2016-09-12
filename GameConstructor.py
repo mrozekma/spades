@@ -115,6 +115,9 @@ class GameConstructor:
 				self.state = 'playing'
 				# Re-pump this event in the playing state
 				return self.pump(event)
+			# In older logs, there was no final bid before going into passing, so we see those events during bidding now. Since it's only needed for showing pass state before round 1 starts, we can ignore it in old logs
+			if event['type'] in ('passing', 'passed'):
+				return
 
 			self.mismatch(event)
 

@@ -51,7 +51,7 @@ class Shim:
 		return line
 
 	@staticmethod
-	def onEvent(gameCon,offset, event):
+	def onEvent(gameCon, offset, event):
 		# Problem where team names weren't saved. The team name in this event is 'dick sledge', but it should've been 'asdf'
 		if gameCon.logFilename == '20160116_035923.log' and offset == 7483:
 			event['team'] = 'asdf'
