@@ -186,7 +186,8 @@ class Round:
 	def __setstate__(self, v):
 		self.__dict__ = v
 		for trick in self.tricks:
-			trick.round = self
+			if trick is not None:
+				trick.round = self
 
 	@property
 	def finished(self):
