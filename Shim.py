@@ -65,4 +65,8 @@ class Shim:
 		if gameCon.logFilename == '20160217_071027.log' and offset == 215:
 			return None
 
+		# rhnoise was tricked into rampaging, then the game was reloaded
+		if gameCon.logFilename == '20160520_004922.log' and offset == 14236:
+			return None
+
 		return event
