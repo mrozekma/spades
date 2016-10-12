@@ -105,7 +105,7 @@ def player(handler, player, q = None):
 				if not game.finished:
 					continue
 				name = os.path.splitext(game.logFilename)[0]
-				won = (player in game.winner)
+				won = (player in (game.winner or []))
 				partner = game.partners[player]
 				myTeam, otherTeam = game.teams
 				if player not in myTeam:
